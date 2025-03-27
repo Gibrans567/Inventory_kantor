@@ -11,7 +11,7 @@ func main() {
 	database.ConnectDB()
 	database.MigrateDB()
 
-	// Setup router
+	// // Setup router
 	r := routes.SetupRouter()
 
 	// Jalankan server

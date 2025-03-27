@@ -12,7 +12,14 @@ func MigrateDB() {
 	}
 
 	// Lakukan migrasi
-	err := db.AutoMigrate(&types.Inventory{})
+	err := db.AutoMigrate( &types.Gudang{},
+        &types.Inventaris{},
+        &types.Divisi{},
+        &types.User{},
+        &types.SebaranBarang{},
+        &types.Kategori{},
+        &types.Depresiasi{},
+    )
 	if err != nil {
 		log.Fatal("Gagal melakukan migrasi:", err)
 	}
