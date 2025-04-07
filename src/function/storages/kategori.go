@@ -41,6 +41,19 @@ func GetKategoriByID(c *gin.Context) {
 }
 
 // UpdateKategori - Mengupdate data Kategori
+func GetAllKategori(c *gin.Context) {
+	db := database.GetDB()
+	var kategoris []types.Kategori
+
+	result := db.Find(&kategoris)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": kategoris})
+}
+
 func UpdateKategori(c *gin.Context) {
 	id := c.Param("id")
 	var kategori types.Kategori

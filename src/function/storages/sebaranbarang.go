@@ -10,18 +10,56 @@ import (
 // CreateSebaranBarang - Menambahkan SebaranBarang baru
 func CreateSebaranBarang(c *gin.Context) {
 	var sebaranBarang types.SebaranBarang
+
+	// Binding JSON ke struct
 	if err := c.ShouldBindJSON(&sebaranBarang); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Cek apakah IdDivisi valid
+	var divisi types.Divisi
 	db := database.GetDB()
+	if err := db.First(&divisi, sebaranBarang.IdDivisi).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Divisi tidak ditemukan"})
+		return
+	}
+
+	// Cek apakah IdBarang valid
+	var barang types.Inventaris
+	if err := db.First(&barang, sebaranBarang.IdBarang).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Barang tidak ditemukan"})
+		return
+	}
+
+	// Cek apakah IdUser valid
+	var user types.User
+	if err := db.First(&user, sebaranBarang.IdUser).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User tidak ditemukan"})
+		return
+	}
+
+	// Cek apakah qty_tersedia di inventaris cukup
+	if barang.QtyTersedia < sebaranBarang.QtyBarang {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Qty Barang yang tersedia tidak cukup"})
+		return
+	}
+
+	// Kurangi qty_tersedia pada Inventaris
+	barang.QtyTersedia -= sebaranBarang.QtyBarang
+	if err := db.Save(&barang).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengupdate Inventaris"})
+		return
+	}
+
+	// Simpan data SebaranBarang ke database
 	result := db.Create(&sebaranBarang)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
 
+	// Respons sukses dengan data yang telah disimpan
 	c.JSON(http.StatusCreated, sebaranBarang)
 }
 
@@ -39,6 +77,39 @@ func GetSebaranBarangByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, sebaranBarang)
 }
+
+// GetAllSebaranBarang - Mendapatkan semua SebaranBarang dengan hanya menampilkan nama terkait
+func GetAllSebaranBarang(c *gin.Context) {
+	var sebaranBarangList []types.SebaranBarang
+	db := database.GetDB()
+
+	// Mengambil semua data SebaranBarang dengan join ke tabel Divisi, Inventaris, dan User
+	result := db.Preload("Divisi").Preload("User").Preload("Inventaris").
+		Find(&sebaranBarangList)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mendapatkan data SebaranBarang"})
+		return
+	}
+
+	// Membuat response yang hanya berisi nama-nama terkait
+	var response []gin.H
+	for _, sebaranBarang := range sebaranBarangList {
+		response = append(response, gin.H{
+			"divisi":     sebaranBarang.Divisi.NamaDivisi, // Asumsi nama divisi ada di struct Divisi
+			"barang":     sebaranBarang.Inventaris.NamaBarang, // Asumsi nama barang ada di struct Inventaris
+			"user":       sebaranBarang.User.NamaUser, // Asumsi nama user ada di struct User
+			"qty_barang": sebaranBarang.QtyBarang,
+			"posisi_awal": sebaranBarang.PosisiAwal,
+			"posisi_akhir": sebaranBarang.PosisiAkhir,
+			"createdAt": sebaranBarang.CreatedAt,
+			"updatedAt": sebaranBarang.UpdatedAt,
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+
 
 // UpdateSebaranBarang - Mengupdate data SebaranBarang
 func UpdateSebaranBarang(c *gin.Context) {

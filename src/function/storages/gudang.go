@@ -15,6 +15,12 @@ func CreateGudang(c *gin.Context) {
 		return
 	}
 
+	// Validation to check if required fields are provided
+	if gudang.NamaGudang == "" || gudang.LokasiGudang == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "NamaGudang and LokasiGudang are required"})
+		return
+	}
+
 	db := database.GetDB()
 	result := db.Create(&gudang)
 	if result.Error != nil {
@@ -25,20 +31,26 @@ func CreateGudang(c *gin.Context) {
 	c.JSON(http.StatusCreated, gudang)
 }
 
-// GetGudangByID - Mendapatkan Gudang berdasarkan ID
-func GetGudangByID(c *gin.Context) {
-	id := c.Param("id")
 
-	var gudang types.Gudang
-	db := database.GetDB()
-	result := db.First(&gudang, id)
-	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Gudang not found"})
-		return
-	}
 
-	c.JSON(http.StatusOK, gudang)
+func GetAllGudang(c *gin.Context) {
+    var gudangs []types.Gudang
+    db := database.GetDB()
+
+    result := db.Omit("Inventaris", "Depresiasi").
+        Select("id", "nama_gudang", "lokasi_gudang", "created_at", "updated_at").
+        Find(&gudangs)
+
+    if result.Error != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch gudang data"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gudangs)
 }
+
+
+
 
 // UpdateGudang - Mengupdate data Gudang
 func UpdateGudang(c *gin.Context) {
@@ -50,25 +62,44 @@ func UpdateGudang(c *gin.Context) {
 	}
 
 	db := database.GetDB()
-	result := db.Model(&types.Gudang{}).Where("id = ?", id).Updates(gudang)
+
+	// Mengecek apakah Gudang dengan ID tersebut ada
+	var existingGudang types.Gudang
+	if err := db.First(&existingGudang, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Gudang not found"})
+		return
+	}
+
+	// Pembaruan field yang diberikan
+	result := db.Model(&existingGudang).Where("id = ?", id).Updates(gudang)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gudang)
+	c.JSON(http.StatusOK, existingGudang)
 }
+
 
 // DeleteGudang - Menghapus Gudang berdasarkan ID
 func DeleteGudang(c *gin.Context) {
 	id := c.Param("id")
 	db := database.GetDB()
 
-	result := db.Delete(&types.Gudang{}, id)
+	// Mengecek apakah Gudang dengan ID tersebut ada
+	var gudang types.Gudang
+	if err := db.First(&gudang, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Gudang not found"})
+		return
+	}
+
+	// Menghapus Gudang dengan ID yang diberikan
+	result := db.Delete(&gudang)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
 
+	// Mengirimkan respons sukses setelah penghapusan
 	c.JSON(http.StatusNoContent, gin.H{"message": "Deleted successfully"})
 }

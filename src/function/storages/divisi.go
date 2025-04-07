@@ -25,6 +25,19 @@ func CreateDivisi(c *gin.Context) {
 	c.JSON(http.StatusCreated, divisi)
 }
 
+func GetAllDivisi(c *gin.Context) {
+    var divisi []types.Divisi
+    db := database.GetDB()
+    
+    result := db.Find(&divisi)
+    if result.Error != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+        return
+    }
+    
+    c.JSON(http.StatusOK, gin.H{"data": divisi})
+}
+
 // GetDivisiByID - Mendapatkan Divisi berdasarkan ID
 func GetDivisiByID(c *gin.Context) {
 	id := c.Param("id")

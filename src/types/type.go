@@ -8,14 +8,15 @@ type Penyusutan struct {
 }
 
 type Gudang struct {
-    ID             uint      `json:"id" gorm:"primaryKey"`
-    NamaGudang     string    `json:"nama_gudang"`
-    LokasiGudang   string    `json:"lokasi_gudang"`
-    CreatedAt      time.Time
-    UpdatedAt      time.Time
-    Inventaris     []Inventaris `gorm:"foreignKey:GudangID"`  // One to Many
-    Depresiasi     []Depresiasi `gorm:"foreignKey:IdGudang"`   // One to Many
+    ID           uint        `json:"id" gorm:"primaryKey"`
+    NamaGudang   string      `json:"nama_gudang"`
+    LokasiGudang string      `json:"lokasi_gudang"`
+    CreatedAt    time.Time
+    UpdatedAt    time.Time
+    Inventaris   []Inventaris `gorm:"foreignKey:GudangID" json:"-"` // Tidak akan muncul di JSON
+    Depresiasi   []Depresiasi `gorm:"foreignKey:IdGudang" json:"-"`
 }
+
 
 type Inventaris struct {
     ID                uint      `json:"id" gorm:"primaryKey"`
@@ -29,12 +30,13 @@ type Inventaris struct {
     QtyTersedia       int       `json:"qty_tersedia"`
     QtyTerpakai       int       `json:"qty_terpakai"`
     TotalNilai        float64   `json:"total_nilai"`
+    UploadNota        string    `json:"upload_nota"`  // Menyimpan path file nota
     CreatedAt         time.Time
     UpdatedAt         time.Time
-    Gudang            Gudang    `gorm:"foreignKey:GudangID"`  // One to Many
-    Kategori          Kategori  `gorm:"foreignKey:KategoriID"`  // One to Many
-    SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdBarang"`   // Many to Many
-    Depresiasi        []Depresiasi `gorm:"foreignKey:IdBarang"`   // One to Many
+    Gudang            Gudang    `gorm:"foreignKey:GudangID" json:"-"`  // One to Many
+    Kategori          Kategori  `gorm:"foreignKey:KategoriID" json:"-"`  // One to Many
+    SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdBarang" json:"-"`   // Many to Many
+    Depresiasi        []Depresiasi `gorm:"foreignKey:IdBarang" json:"-"`   // One to Many
 }
 
 type Divisi struct {
@@ -42,8 +44,8 @@ type Divisi struct {
     NamaDivisi        string    `json:"nama_divisi"`
     CreatedAt         time.Time
     UpdatedAt         time.Time
-    User              []User      `gorm:"foreignKey:IdDivisi"`  // One to Many
-    SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdDivisi"`  // One to Many
+    User              []User      `gorm:"foreignKey:IdDivisi" json:"-"`  // One to Many
+    SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdDivisi" json:"-"`  // One to Many
 }
 
 type User struct {
@@ -55,8 +57,8 @@ type User struct {
     Role              string    `json:"role"`
     CreatedAt         time.Time
     UpdatedAt         time.Time
-    Divisi            Divisi     `gorm:"foreignKey:IdDivisi"`  // Many to One
-    SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdUser"`  // One to Many
+    Divisi            Divisi     `gorm:"foreignKey:IdDivisi" json:"-"`  // Many to One
+    SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdUser" json:"-"`  // One to Many
 }
 
 type SebaranBarang struct {
@@ -69,9 +71,9 @@ type SebaranBarang struct {
     PosisiAkhir       string    `json:"posisi_akhir"`
     CreatedAt         time.Time
     UpdatedAt         time.Time
-    Divisi            Divisi     `gorm:"foreignKey:IdDivisi"`  // Many to One
-    User              User      `gorm:"foreignKey:IdUser"`    // Many to One
-    Inventaris        Inventaris `gorm:"foreignKey:IdBarang"` // Many to Many
+    Divisi            Divisi     `gorm:"foreignKey:IdDivisi" json:"-"`  // Many to One
+    User              User      `gorm:"foreignKey:IdUser" json:"-"`    // Many to One
+    Inventaris        Inventaris `gorm:"foreignKey:IdBarang" json:"-"` // Many to Many
 }
 
 type Kategori struct {
@@ -79,7 +81,7 @@ type Kategori struct {
     NamaKategori     string    `json:"nama_kategori"`
     CreatedAt        time.Time
     UpdatedAt        time.Time
-    Inventaris       []Inventaris `gorm:"foreignKey:KategoriID"`  // One to Many
+    Inventaris       []Inventaris `gorm:"foreignKey:KategoriID" json:"-"`  // One to Many
 }
 
 type Depresiasi struct {
@@ -91,6 +93,6 @@ type Depresiasi struct {
     Tahun            int       `json:"tahun"`
     CreatedAt        time.Time
     UpdatedAt        time.Time
-    Gudang           Gudang    `gorm:"foreignKey:IdGudang"`  // Many to One
-    Inventaris       Inventaris `gorm:"foreignKey:IdBarang"` // Many to One
+    Gudang           Gudang    `gorm:"foreignKey:IdGudang" json:"-"`  // Many to One
+    Inventaris       Inventaris `gorm:"foreignKey:IdBarang" json:"-"` // Many to One
 }

@@ -13,7 +13,7 @@ func SetupRouter() *gin.Engine {
 	depresiasi := r.Group("/depresiasi")
 	{
 		depresiasi.POST("/", storage.CreateDepresiasi)
-		depresiasi.GET("/:id", storage.GetDepresiasiByID)
+		depresiasi.GET("/", storage.GetAllDepresiasi)
 		depresiasi.PUT("/:id", storage.UpdateDepresiasi)
 		depresiasi.DELETE("/:id", storage.DeleteDepresiasi)
 	}
@@ -22,7 +22,7 @@ func SetupRouter() *gin.Engine {
 	divisi := r.Group("/divisi")
 	{
 		divisi.POST("/", storage.CreateDivisi)
-		divisi.GET("/:id", storage.GetDivisiByID)
+		divisi.GET("/", storage.GetAllDivisi)
 		divisi.PUT("/:id", storage.UpdateDivisi)
 		divisi.DELETE("/:id", storage.DeleteDivisi)
 	}
@@ -31,8 +31,8 @@ func SetupRouter() *gin.Engine {
 	gudang := r.Group("/gudang")
 	{
 		gudang.POST("/", storage.CreateGudang)
-		gudang.GET("/:id", storage.GetGudangByID)
-		gudang.PUT("/:id", storage.UpdateGudang)
+		gudang.GET("/", storage.GetAllGudang)
+		gudang.POST("/update/:id", storage.UpdateGudang)
 		gudang.DELETE("/:id", storage.DeleteGudang)
 	}
 
@@ -40,7 +40,7 @@ func SetupRouter() *gin.Engine {
 	inventaris := r.Group("/inventaris")
 	{
 		inventaris.POST("/", storage.CreateInventaris)
-		inventaris.GET("/:id", storage.GetInventarisByID)
+		inventaris.GET("/", storage.GetAllInventaris)
 		inventaris.PUT("/:id", storage.UpdateInventaris)
 		inventaris.DELETE("/:id", storage.DeleteInventaris)
 	}
@@ -49,7 +49,7 @@ func SetupRouter() *gin.Engine {
 	kategori := r.Group("/kategori")
 	{
 		kategori.POST("/", storage.CreateKategori)
-		kategori.GET("/:id", storage.GetKategoriByID)
+		kategori.GET("/", storage.GetAllKategori)
 		kategori.PUT("/:id", storage.UpdateKategori)
 		kategori.DELETE("/:id", storage.DeleteKategori)
 	}
@@ -58,7 +58,7 @@ func SetupRouter() *gin.Engine {
 	sebaranBarang := r.Group("/sebaranBarang")
 	{
 		sebaranBarang.POST("/", storage.CreateSebaranBarang)
-		sebaranBarang.GET("/:id", storage.GetSebaranBarangByID)
+		sebaranBarang.GET("/", storage.GetAllSebaranBarang)
 		sebaranBarang.PUT("/:id", storage.UpdateSebaranBarang)
 		sebaranBarang.DELETE("/:id", storage.DeleteSebaranBarang)
 	}

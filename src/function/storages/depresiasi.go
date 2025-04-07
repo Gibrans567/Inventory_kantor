@@ -40,6 +40,26 @@ func GetDepresiasiByID(c *gin.Context) {
 	c.JSON(http.StatusOK, depresiasi)
 }
 
+// GetAllDepresiasi - Mendapatkan semua data Depresiasi
+func GetAllDepresiasi(c *gin.Context) {
+	var depresiasi []types.Depresiasi
+	db := database.GetDB()
+	
+	// Mengambil semua data depresiasi
+	if err := db.Find(&depresiasi).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	
+	// Jika tidak ada data, kembalikan array kosong bukan error
+	if len(depresiasi) == 0 {
+		c.JSON(http.StatusOK, []types.Depresiasi{})
+		return
+	}
+	
+	c.JSON(http.StatusOK, depresiasi)
+}
+
 // UpdateDepresiasi - Mengupdate data Depresiasi
 func UpdateDepresiasi(c *gin.Context) {
 	id := c.Param("id")
