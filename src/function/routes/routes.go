@@ -41,6 +41,7 @@ func SetupRouter() *gin.Engine {
 	{
 		inventaris.POST("/", storage.CreateInventaris)
 		inventaris.GET("/", storage.GetAllInventaris)
+		inventaris.GET("/:id", storage.GetInventarisById)
 		inventaris.PUT("/:id", storage.UpdateInventaris)
 		inventaris.DELETE("/:id", storage.DeleteInventaris)
 	}
@@ -67,6 +68,7 @@ func SetupRouter() *gin.Engine {
 	user := r.Group("/user")
 	{
 		user.POST("/", storage.CreateUser)
+		user.GET("/", storage.GetUserByID)
 		user.GET("/:id", storage.GetUserByID)
 		user.PUT("/:id", storage.UpdateUser)
 		user.DELETE("/:id", storage.DeleteUser)

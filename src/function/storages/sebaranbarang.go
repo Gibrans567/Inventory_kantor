@@ -45,22 +45,44 @@ func CreateSebaranBarang(c *gin.Context) {
 		return
 	}
 
-	// Kurangi qty_tersedia pada Inventaris
+	// Mulai transaksi database
+	tx := db.Begin()
+
+	// Update qty_tersedia dan qty_digunakan pada Inventaris
 	barang.QtyTersedia -= sebaranBarang.QtyBarang
-	if err := db.Save(&barang).Error; err != nil {
+	barang.QtyTerpakai += sebaranBarang.QtyBarang
+	
+	if err := tx.Save(&barang).Error; err != nil {
+		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengupdate Inventaris"})
 		return
 	}
 
 	// Simpan data SebaranBarang ke database
-	result := db.Create(&sebaranBarang)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+	if err := tx.Create(&sebaranBarang).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
+	// Commit transaksi jika semua operasi berhasil
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan data"})
+		return
+	}
+
+	// Response dengan pesan khusus jika qty_tersedia menjadi 0
+	responseData := gin.H{
+		"data": sebaranBarang,
+		"message": "Data berhasil disimpan",
+	}
+	
+	if barang.QtyTersedia == 0 {
+		responseData["message"] = "Data berhasil disimpan. Semua barang sudah digunakan."
+	}
+
 	// Respons sukses dengan data yang telah disimpan
-	c.JSON(http.StatusCreated, sebaranBarang)
+	c.JSON(http.StatusCreated, responseData)
 }
 
 // GetSebaranBarangByID - Mendapatkan SebaranBarang berdasarkan ID
@@ -108,8 +130,6 @@ func GetAllSebaranBarang(c *gin.Context) {
 
 	c.JSON(http.StatusOK, response)
 }
-
-
 
 // UpdateSebaranBarang - Mengupdate data SebaranBarang
 func UpdateSebaranBarang(c *gin.Context) {

@@ -35,8 +35,8 @@ type Inventaris struct {
     UpdatedAt         time.Time
     Gudang            Gudang    `gorm:"foreignKey:GudangID" json:"-"`  // One to Many
     Kategori          Kategori  `gorm:"foreignKey:KategoriID" json:"-"`  // One to Many
-    SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdBarang" json:"-"`   // Many to Many
     Depresiasi        []Depresiasi `gorm:"foreignKey:IdBarang" json:"-"`   // One to Many
+    SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdBarang" json:"-"`   // Many to Many
 }
 
 type Divisi struct {
@@ -51,7 +51,7 @@ type Divisi struct {
 type User struct {
     ID                uint      `json:"id" gorm:"primaryKey"`
     IdDivisi          uint      `json:"id_divisi"`
-    Username          string    `json:"username"`
+    Email             string    `json:"email"`
     Password          string    `json:"password"`
     NamaUser          string    `json:"nama_user"`
     Role              string    `json:"role"`

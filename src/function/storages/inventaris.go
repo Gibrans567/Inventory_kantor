@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"gorm.io/gorm"
+	"time"
 )
 
 // CreateInventaris - Menambahkan Inventaris baru dan mencatat depresiasi
@@ -70,8 +71,8 @@ func CreateInventaris(c *gin.Context) {
 		IdGudang:        inventaris.GudangID,
 		IdBarang:        inventaris.ID,
 		HargaDepresiasi: hargaDepresiasi,
-		Perbulan:        1,  // Set default ke 1
-		Tahun:           1,  // Set default ke 1
+		Perbulan:        hargaDepresiasi,  // Set default ke 1
+		Tahun:           hargaDepresiasi*12,  // Set default ke 1
 	}
 	
 	// Menyimpan data depresiasi ke database
@@ -136,6 +137,69 @@ func GetAllInventaris(c *gin.Context) {
     c.JSON(http.StatusOK, result)
 }
 
+// GetInventarisById - Mendapatkan data Inventaris berdasarkan ID dan data SebaranBarang terkait
+func GetInventarisById(c *gin.Context) {
+    // Mendapatkan ID dari parameter URL
+    id := c.Param("id")
+    
+    // Validasi ID
+    if id == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "ID tidak boleh kosong"})
+        return
+    }
+    
+    var inventaris types.Inventaris
+    db := database.GetDB()
+    
+    // Mengambil data inventaris berdasarkan ID dan menampilkan nama Gudang dan Kategori
+    if err := db.Preload("Gudang", func(db *gorm.DB) *gorm.DB {
+        return db.Select("id, nama_gudang")  // Hanya mengambil id dan nama_gudang dari Gudang
+    }).Preload("Kategori", func(db *gorm.DB) *gorm.DB {
+        return db.Select("id, nama_kategori")  // Hanya mengambil id dan nama_kategori dari Kategori
+    }).First(&inventaris, id).Error; err != nil {
+        if err == gorm.ErrRecordNotFound {
+            c.JSON(http.StatusNotFound, gin.H{"error": "Data inventaris tidak ditemukan"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        }
+        return
+    }
+    
+    // Mengambil semua data sebaran barang yang memiliki id_barang yang sama
+    var sebaranBarang []types.SebaranBarang
+    if err := db.Where("id_barang = ?", inventaris.ID).Find(&sebaranBarang).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    
+    // Format waktu yang konsisten
+    createdAt := inventaris.CreatedAt.Format(time.RFC3339)
+    updatedAt := inventaris.UpdatedAt.Format(time.RFC3339)
+    tanggalPembelian := inventaris.TanggalPembelian.Format(time.RFC3339)
+    
+    // Menyiapkan hasil yang berisi data inventaris dengan nama gudang dan kategori
+    result := gin.H{
+        "id":                 inventaris.ID,
+        "tanggal_pembelian":  tanggalPembelian,
+        "gudang_id":          inventaris.GudangID,
+        "gudang_nama":        inventaris.Gudang.NamaGudang,     // Nama Gudang
+        "kategori_id":        inventaris.KategoriID,
+        "kategori_nama":      inventaris.Kategori.NamaKategori, // Nama Kategori
+        "nama_barang":        inventaris.NamaBarang,
+        "qty_barang":         inventaris.QtyBarang,
+        "qty_terpakai":       inventaris.QtyTerpakai,
+        "qty_tersedia":       inventaris.QtyTersedia,
+        "harga_pembelian":    inventaris.HargaPembelian,
+        "spesifikasi":        inventaris.Spesifikasi,
+        "total_nilai":        inventaris.TotalNilai,
+        "upload_nota":        inventaris.UploadNota,
+        "created_at":         createdAt,
+        "updated_at":         updatedAt,
+        "sebaran_barang":     sebaranBarang,                    // Data sebaran barang di akhir
+    }
+
+    c.JSON(http.StatusOK, result)
+}
 
 
 // UpdateInventaris - Mengupdate data Inventaris
