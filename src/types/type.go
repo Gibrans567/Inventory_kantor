@@ -2,11 +2,6 @@ package types
 
 import "time"
 
-type Penyusutan struct {
-	NilaiPenyusutan int `json:"nilai_penyusutan"`
-	HargaPenyusutan int `json:"harga_penyusutan"`
-}
-
 type Gudang struct {
     ID           uint        `json:"id" gorm:"primaryKey"`
     NamaGudang   string      `json:"nama_gudang"`
@@ -37,6 +32,8 @@ type Inventaris struct {
     Kategori          Kategori  `gorm:"foreignKey:KategoriID" json:"-"`  // One to Many
     Depresiasi        []Depresiasi `gorm:"foreignKey:IdBarang" json:"-"`   // One to Many
     SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdBarang" json:"-"`   // Many to Many
+    //Kepemilikan
+    //divisi
 }
 
 type Divisi struct {
@@ -51,7 +48,7 @@ type Divisi struct {
 type User struct {
     ID                uint      `json:"id" gorm:"primaryKey"`
     IdDivisi          uint      `json:"id_divisi"`
-    Email             string    `json:"email"`
+    Email             string    `json:"email" binding:"required,email"`
     Password          string    `json:"password"`
     NamaUser          string    `json:"nama_user"`
     Role              string    `json:"role"`
@@ -72,7 +69,7 @@ type SebaranBarang struct {
     CreatedAt         time.Time
     UpdatedAt         time.Time
     Divisi            Divisi     `gorm:"foreignKey:IdDivisi" json:"-"`  // Many to One
-    User              User      `gorm:"foreignKey:IdUser" json:"-"`    // Many to One
+    User              *User      `gorm:"foreignKey:IdUser" json:"-"`    // Many to One
     Inventaris        Inventaris `gorm:"foreignKey:IdBarang" json:"-"` // Many to Many
 }
 
@@ -96,3 +93,15 @@ type Depresiasi struct {
     Gudang           Gudang    `gorm:"foreignKey:IdGudang" json:"-"`  // Many to One
     Inventaris       Inventaris `gorm:"foreignKey:IdBarang" json:"-"` // Many to One
 }
+
+//history
+
+//audit
+
+//ekstrak
+
+//dizip lalu disimpen di foldering untuk file upload atau data dari database
+
+//Halaman data barang masing masing
+
+//docker hub

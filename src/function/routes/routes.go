@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"inventory/src/function/storages"
+	"inventory/src/function/controller"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,66 +12,66 @@ func SetupRouter() *gin.Engine {
 	// Depresiasi Routes
 	depresiasi := r.Group("/depresiasi")
 	{
-		depresiasi.POST("/", storage.CreateDepresiasi)
-		depresiasi.GET("/", storage.GetAllDepresiasi)
-		depresiasi.PUT("/:id", storage.UpdateDepresiasi)
-		depresiasi.DELETE("/:id", storage.DeleteDepresiasi)
+		depresiasi.POST("/", controller.CreateDepresiasi)
+		depresiasi.GET("/", controller.GetAllDepresiasi)
+		depresiasi.PUT("/:id", controller.UpdateDepresiasi)
+		depresiasi.DELETE("/:id", controller.DeleteDepresiasi)
 	}
 
 	// Divisi Routes
 	divisi := r.Group("/divisi")
 	{
-		divisi.POST("/", storage.CreateDivisi)
-		divisi.GET("/", storage.GetAllDivisi)
-		divisi.PUT("/:id", storage.UpdateDivisi)
-		divisi.DELETE("/:id", storage.DeleteDivisi)
+		divisi.POST("/", controller.CreateDivisi)
+		divisi.GET("/", controller.GetAllDivisi)
+		divisi.PUT("/:id", controller.UpdateDivisi)
+		divisi.DELETE("/:id", controller.DeleteDivisi)
 	}
 
 	// Gudang Routes
 	gudang := r.Group("/gudang")
 	{
-		gudang.POST("/", storage.CreateGudang)
-		gudang.GET("/", storage.GetAllGudang)
-		gudang.POST("/update/:id", storage.UpdateGudang)
-		gudang.DELETE("/:id", storage.DeleteGudang)
+		gudang.POST("/", controller.CreateGudang)
+		gudang.GET("/", controller.GetAllGudang)
+		gudang.POST("/update/:id", controller.UpdateGudang)
+		gudang.DELETE("/:id", controller.DeleteGudang)
 	}
 
 	// Inventaris Routes
 	inventaris := r.Group("/inventaris")
 	{
-		inventaris.POST("/", storage.CreateInventaris)
-		inventaris.GET("/", storage.GetAllInventaris)
-		inventaris.GET("/:id", storage.GetInventarisById)
-		inventaris.PUT("/:id", storage.UpdateInventaris)
-		inventaris.DELETE("/:id", storage.DeleteInventaris)
+		inventaris.POST("/", controller.CreateInventaris)
+		inventaris.GET("/", controller.GetAllInventaris)
+		inventaris.GET("/:id", controller.GetInventarisById)
+		inventaris.PUT("/:id", controller.UpdateInventaris)
+		inventaris.DELETE("/:id", controller.DeleteInventaris)
 	}
 
 	// Kategori Routes
 	kategori := r.Group("/kategori")
 	{
-		kategori.POST("/", storage.CreateKategori)
-		kategori.GET("/", storage.GetAllKategori)
-		kategori.PUT("/:id", storage.UpdateKategori)
-		kategori.DELETE("/:id", storage.DeleteKategori)
+		kategori.POST("/", controller.CreateKategori)
+		kategori.GET("/", controller.GetAllKategori)
+		kategori.PUT("/:id", controller.UpdateKategori)
+		kategori.DELETE("/:id", controller.DeleteKategori)
 	}
 
 	// SebaranBarang Routes
 	sebaranBarang := r.Group("/sebaranBarang")
 	{
-		sebaranBarang.POST("/", storage.CreateSebaranBarang)
-		sebaranBarang.GET("/", storage.GetAllSebaranBarang)
-		sebaranBarang.PUT("/:id", storage.UpdateSebaranBarang)
-		sebaranBarang.DELETE("/:id", storage.DeleteSebaranBarang)
+		sebaranBarang.POST("/", controller.CreateSebaranBarang)
+		sebaranBarang.GET("/", controller.GetAllSebaranBarang)
+		sebaranBarang.PUT("/:id", controller.UpdateSebaranBarang)
+		sebaranBarang.DELETE("/:id", controller.DeleteSebaranBarang)
 	}
 
 	// User Routes
 	user := r.Group("/user")
 	{
-		user.POST("/", storage.CreateUser)
-		user.GET("/", storage.GetUserByID)
-		user.GET("/:id", storage.GetUserByID)
-		user.PUT("/:id", storage.UpdateUser)
-		user.DELETE("/:id", storage.DeleteUser)
+		user.POST("/", controller.CreateUser)
+		user.GET("/", controller.GetUserByID)
+		user.GET("/:id", controller.GetUserByID)
+		user.PUT("/:id", controller.UpdateUser)
+		user.DELETE("/:id", controller.DeleteUser)
 	}
 	
 	return r

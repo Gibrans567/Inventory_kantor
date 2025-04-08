@@ -1,4 +1,4 @@
-package storage
+package controller
 
 import (
 	"inventory/src/types"
@@ -199,6 +199,78 @@ func GetInventarisById(c *gin.Context) {
     }
 
     c.JSON(http.StatusOK, result)
+}
+
+func GetInventarisByDate(c *gin.Context) {
+	// Struct untuk menerima body request
+	var request struct {
+		StartDate string `json:"start_date"`
+		EndDate   string `json:"end_date"`
+	}
+
+	// Binding JSON
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Format JSON tidak valid"})
+		return
+	}
+
+	// Parse tanggal
+	startDate, err := time.Parse("2006-01-02", request.StartDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "start_date harus format YYYY-MM-DD"})
+		return
+	}
+	endDate, err := time.Parse("2006-01-02", request.EndDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "end_date harus format YYYY-MM-DD"})
+		return
+	}
+	endDate = endDate.Add(23*time.Hour + 59*time.Minute + 59*time.Second) // Biar sampai akhir hari
+
+	// Query database
+	db := database.GetDB()
+	query := db.Preload("Gudang", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, nama_gudang")
+	}).Preload("Kategori", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id, nama_kategori")
+	}).Where("created_at BETWEEN ? AND ?", startDate, endDate)
+
+	var inventarisList []types.Inventaris
+	if err := query.Find(&inventarisList).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	var result []gin.H
+	for _, inv := range inventarisList {
+		var sebaranBarang []types.SebaranBarang
+		if err := db.Where("id_barang = ? AND created_at BETWEEN ? AND ?", inv.ID, startDate, endDate).Find(&sebaranBarang).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		result = append(result, gin.H{
+			"id":                 inv.ID,
+			"tanggal_pembelian": inv.TanggalPembelian.Format(time.RFC3339),
+			"gudang_id":          inv.GudangID,
+			"gudang_nama":        inv.Gudang.NamaGudang,
+			"kategori_id":        inv.KategoriID,
+			"kategori_nama":      inv.Kategori.NamaKategori,
+			"nama_barang":        inv.NamaBarang,
+			"qty_barang":         inv.QtyBarang,
+			"qty_terpakai":       inv.QtyTerpakai,
+			"qty_tersedia":       inv.QtyTersedia,
+			"harga_pembelian":    inv.HargaPembelian,
+			"spesifikasi":        inv.Spesifikasi,
+			"total_nilai":        inv.TotalNilai,
+			"upload_nota":        inv.UploadNota,
+			"created_at":         inv.CreatedAt.Format(time.RFC3339),
+			"updated_at":         inv.UpdatedAt.Format(time.RFC3339),
+			"sebaran_barang":     sebaranBarang,
+		})
+	}
+
+	c.JSON(http.StatusOK, result)
 }
 
 

@@ -1,4 +1,4 @@
-package storage
+package controller
 
 import (
 	"inventory/src/types"
@@ -141,12 +141,58 @@ func UpdateSebaranBarang(c *gin.Context) {
 	}
 
 	db := database.GetDB()
-	result := db.Model(&types.SebaranBarang{}).Where("id = ?", id).Updates(sebaranBarang)
+	
+	// Begin transaction
+	tx := db.Begin()
+	
+	// Retrieve the current data before update
+	var currentBarang types.SebaranBarang
+	if err := tx.Where("id = ?", id).First(&currentBarang).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusNotFound, gin.H{"error": "Record not found"})
+		return
+	}
+	
+	// Check if there is another record with the same id_barang and same posisi_akhir (excluding current record)
+	var targetBarang types.SebaranBarang
+	findResult := tx.Where("id_barang = ? AND posisi_akhir = ? AND id != ?", 
+		sebaranBarang.IdBarang, sebaranBarang.PosisiAkhir, id).First(&targetBarang)
+	
+	if findResult.Error == nil {
+		// Found a match, add the quantity to the target
+		targetBarang.QtyBarang += sebaranBarang.QtyBarang
+		
+		// Update the target item with the increased quantity
+		if err := tx.Model(&targetBarang).Update("qty_barang", targetBarang.QtyBarang).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		
+		// Delete the current item since it's been merged
+		if err := tx.Delete(&types.SebaranBarang{}, id).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		
+		tx.Commit()
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Barang successfully merged with existing record",
+			"target_item": targetBarang,
+		})
+		return
+	}
+	
+	// No matching item found, just update as normal
+	result := tx.Model(&types.SebaranBarang{}).Where("id = ?", id).Updates(sebaranBarang)
 	if result.Error != nil {
+		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
-
+	
+	tx.Commit()
 	c.JSON(http.StatusOK, sebaranBarang)
 }
 
