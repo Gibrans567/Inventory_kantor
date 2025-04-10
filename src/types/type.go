@@ -1,7 +1,8 @@
 package types
 
-import "time"
-
+import ("time"
+    "github.com/golang-jwt/jwt/v5"
+)
 type Gudang struct {
     ID           uint        `json:"id" gorm:"primaryKey"`
     NamaGudang   string      `json:"nama_gudang"`
@@ -53,7 +54,7 @@ type User struct {
     IdDivisi          uint      `json:"id_divisi"`
     Email             string    `json:"email" binding:"required,email"`
     Password          string    `json:"password"`
-    NamaUser          string    `json:"nama_user"`
+    Name          string    `json:"nama_user"`
     Role              string    `json:"role"`
     CreatedAt         time.Time
     UpdatedAt         time.Time
@@ -109,6 +110,14 @@ type JadwalDepresiasi struct {
 	IdBarang         uint      `json:"id_barang"`
 	NextRun          time.Time `json:"next_run"`
 }
+
+type JWTClaims struct {
+    UserID uint   `json:"user_id"`
+    Email  string `json:"email"`
+    Role   string `json:"role"`
+    jwt.RegisteredClaims
+}
+
 
 //audit
 

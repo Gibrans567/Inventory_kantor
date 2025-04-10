@@ -475,7 +475,7 @@ func DeleteInventaris(c *gin.Context) {
 	historyKeterangan := fmt.Sprintf("Barang %s yang ada di %s telah dijual oleh %s dari divisi %s sebanyak %d buah pada %s", 
 		inventaris.NamaBarang,
 		posisiAkhir, // Menambahkan posisi akhir dari SebaranBarang
-		user.NamaUser,
+		user.Name,
 		divisi.NamaDivisi,
 		inventaris.QtyBarang,
 		now.Format("02-01-2006 15:04:05"))

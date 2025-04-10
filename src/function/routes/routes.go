@@ -2,8 +2,8 @@ package routes
 
 import (
 	"inventory/src/function/controller"
-
 	"github.com/gin-gonic/gin"
+	"inventory/src/function/middleware"
 )
 
 func SetupRouter() *gin.Engine {
@@ -89,6 +89,18 @@ func SetupRouter() *gin.Engine {
 		schedulerRoutes.GET("/", controller.GetAllJadwal)
 	}
 
+	// Auth group
+	auth := r.Group("/auth")
+	{
+		auth.POST("/login", middleware.LoginHandler)
+	}
+
+	// Protected route
+	api := r.Group("/api")
+	api.Use(middleware.AuthMiddleware())
+	{
+		api.POST("/pegawai", middleware.RequireRole("pegawai"),  middleware.LogoutHandler)
+	}
 
 	return r
 }

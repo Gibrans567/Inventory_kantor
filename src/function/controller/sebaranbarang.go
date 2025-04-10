@@ -81,7 +81,7 @@ func CreateSebaranBarang(c *gin.Context) {
 	// Membuat pesan history dengan format yang diminta
 	historyKeterangan := fmt.Sprintf("Barang %s telah dipindahkan oleh %s dari divisi %s sebanyak %d dari %s ke %s pada %s", 
 		barang.NamaBarang,
-		user.NamaUser,
+		user.Name,
 		divisi.NamaDivisi,
 		sebaranBarang.QtyBarang,
 		sebaranBarang.PosisiAwal, // posisi awal (gudang)
@@ -156,7 +156,7 @@ func GetAllSebaranBarang(c *gin.Context) {
 		response = append(response, gin.H{
 			"divisi":     sebaranBarang.Divisi.NamaDivisi, // Asumsi nama divisi ada di struct Divisi
 			"barang":     sebaranBarang.Inventaris.NamaBarang, // Asumsi nama barang ada di struct Inventaris
-			"user":       sebaranBarang.User.NamaUser, // Asumsi nama user ada di struct User
+			"user":       sebaranBarang.User.Name, // Asumsi nama user ada di struct User
 			"qty_barang": sebaranBarang.QtyBarang,
 			"posisi_awal": sebaranBarang.PosisiAwal,
 			"posisi_akhir": sebaranBarang.PosisiAkhir,
