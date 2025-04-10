@@ -32,7 +32,6 @@ func CreateGudang(c *gin.Context) {
 }
 
 
-
 func GetAllGudang(c *gin.Context) {
     var gudangs []types.Gudang
     db := database.GetDB()
@@ -48,8 +47,6 @@ func GetAllGudang(c *gin.Context) {
 
     c.JSON(http.StatusOK, gudangs)
 }
-
-
 
 
 // UpdateGudang - Mengupdate data Gudang

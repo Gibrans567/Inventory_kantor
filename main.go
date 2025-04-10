@@ -1,17 +1,20 @@
 package main
 
 import (
+	"inventory/src/function/controller"
 	"inventory/src/function/database"
 	"inventory/src/function/routes"
 )
 
+
+
 func main() {
-	// Koneksi ke database
+	
 	
 	database.ConnectDB()
 	database.MigrateDB()
-
-	// // Setup router
+	controller.InitiateScheduler()
+	
 	r := routes.SetupRouter()
 
 	// Jalankan server

@@ -39,7 +39,7 @@ func SetupRouter() *gin.Engine {
 	// Inventaris Routes
 	inventaris := r.Group("/inventaris")
 	{
-		inventaris.POST("/", controller.CreateInventaris)
+		inventaris.POST("/", controller.CreateInventaris1)
 		inventaris.GET("/", controller.GetAllInventaris)
 		inventaris.GET("/:id", controller.GetInventarisById)
 		inventaris.PUT("/:id", controller.UpdateInventaris)
@@ -74,5 +74,21 @@ func SetupRouter() *gin.Engine {
 		user.DELETE("/:id", controller.DeleteUser)
 	}
 	
+	historyRoutes := r.Group("/histories")
+	{
+		historyRoutes.POST("/", controller.CreateHistory)
+		historyRoutes.GET("/", controller.GetAllHistories)
+		historyRoutes.GET("/:id", controller.GetHistoryByID)
+		historyRoutes.POST("/:id", controller.UpdateHistory)
+		historyRoutes.DELETE("/:id", controller.DeleteHistory)
+	}
+
+	schedulerRoutes := r.Group("/scheduler")
+	{
+		schedulerRoutes.POST("/", controller.ApplyDepresiasi)
+		schedulerRoutes.GET("/", controller.GetAllJadwal)
+	}
+
+
 	return r
 }

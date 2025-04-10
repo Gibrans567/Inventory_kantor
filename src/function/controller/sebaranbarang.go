@@ -5,6 +5,8 @@ import (
 	"inventory/src/function/database"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"time"
+	"fmt"
 )
 
 // CreateSebaranBarang - Menambahkan SebaranBarang baru
@@ -65,6 +67,40 @@ func CreateSebaranBarang(c *gin.Context) {
 		return
 	}
 
+	// Buat catatan history untuk Barang Keluar
+	now := time.Now()
+	
+	// Ambil gudang dari barang
+	var gudang types.Gudang
+	if err := db.First(&gudang, barang.GudangID).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data gudang"})
+		return
+	}
+	
+	// Membuat pesan history dengan format yang diminta
+	historyKeterangan := fmt.Sprintf("Barang %s telah dipindahkan oleh %s dari divisi %s sebanyak %d dari %s ke %s pada %s", 
+		barang.NamaBarang,
+		user.NamaUser,
+		divisi.NamaDivisi,
+		sebaranBarang.QtyBarang,
+		sebaranBarang.PosisiAwal, // posisi awal (gudang)
+		sebaranBarang.PosisiAkhir, // posisi akhir (lokasi baru)
+		now.Format("02-01-2006 15:04:05"))
+	
+	history := types.History{
+		Kategori:   "Perpindahan Barang",
+		Keterangan: historyKeterangan,
+		CreatedAt:  now,
+	}
+	
+	// Simpan data history ke database
+	if err := tx.Create(&history).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan data history: " + err.Error()})
+		return
+	}
+
 	// Commit transaksi jika semua operasi berhasil
 	if err := tx.Commit().Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan data"})
@@ -74,6 +110,7 @@ func CreateSebaranBarang(c *gin.Context) {
 	// Response dengan pesan khusus jika qty_tersedia menjadi 0
 	responseData := gin.H{
 		"data": sebaranBarang,
+		"history": history,
 		"message": "Data berhasil disimpan",
 	}
 	

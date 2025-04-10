@@ -18,22 +18,24 @@ type Inventaris struct {
     TanggalPembelian  time.Time `json:"tanggal_pembelian"`
     GudangID          uint      `json:"gudang_id"`
     KategoriID        uint      `json:"kategori_id"`
+    DivisiID          uint      `json:"divisi_id"`
+    UserID            int      `json:"user_id"`
     NamaBarang        string    `json:"nama_barang"`
     QtyBarang         int       `json:"qty_barang"`
-    HargaPembelian    float64   `json:"harga_pembelian"`
+    HargaPembelian    int`json:"harga_pembelian"`
     Spesifikasi       string    `json:"spesifikasi"`
     QtyTersedia       int       `json:"qty_tersedia"`
     QtyTerpakai       int       `json:"qty_terpakai"`
-    TotalNilai        float64   `json:"total_nilai"`
+    TotalNilai        int `json:"total_nilai"`
     UploadNota        string    `json:"upload_nota"`  // Menyimpan path file nota
     CreatedAt         time.Time
     UpdatedAt         time.Time
+    User              *User      `gorm:"foreignKey:UserID" json:"-"`    // One to Many
     Gudang            Gudang    `gorm:"foreignKey:GudangID" json:"-"`  // One to Many
+    Divisi            Divisi    `gorm:"foreignKey:DivisiID" json:"-"`  // One to Many
     Kategori          Kategori  `gorm:"foreignKey:KategoriID" json:"-"`  // One to Many
     Depresiasi        []Depresiasi `gorm:"foreignKey:IdBarang" json:"-"`   // One to Many
     SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdBarang" json:"-"`   // Many to Many
-    //Kepemilikan
-    //divisi
 }
 
 type Divisi struct {
@@ -43,6 +45,7 @@ type Divisi struct {
     UpdatedAt         time.Time
     User              []User      `gorm:"foreignKey:IdDivisi" json:"-"`  // One to Many
     SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdDivisi" json:"-"`  // One to Many
+    Inventaris        []Inventaris `gorm:"foreignKey:DivisiID" json:"-"`  // One to Many
 }
 
 type User struct {
@@ -94,11 +97,22 @@ type Depresiasi struct {
     Inventaris       Inventaris `gorm:"foreignKey:IdBarang" json:"-"` // Many to One
 }
 
-//history
+type History struct {
+    ID               uint      `json:"id" gorm:"primaryKey"`
+    Kategori         string      `json:"kategori"`
+    Keterangan       string      `json:"keterangan"`
+    CreatedAt        time.Time   `json:"created_at"`
+}
+
+type JadwalDepresiasi struct {
+	ID               uint      `json:"id" gorm:"primaryKey"`
+	IdBarang         uint      `json:"id_barang"`
+	NextRun          time.Time `json:"next_run"`
+}
 
 //audit
 
-//ekstrak
+//ekstrak 
 
 //dizip lalu disimpen di foldering untuk file upload atau data dari database
 
