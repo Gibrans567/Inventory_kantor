@@ -8,97 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
     "log"
+
+
+	"os"
+	"path/filepath"
 )
 
 
-func CreateInventaris1(c *gin.Context) {
-    var inventaris types.Inventaris
-    db := database.GetDB()
 
-    if err := c.ShouldBindJSON(&inventaris); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
-
-    // Validation code remains the same...
-    var gudang types.Gudang
-    if err := db.Where("id = ?", inventaris.GudangID).First(&gudang).Error; err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "GudangID tidak valid"})
-        return
-    }
-
-    var kategori types.Kategori
-    if err := db.Where("id = ?", inventaris.KategoriID).First(&kategori).Error; err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "KategoriID tidak valid"})
-        return
-    }
-
-    inventaris.QtyTerpakai = 0
-    inventaris.TotalNilai = inventaris.HargaPembelian * (inventaris.QtyBarang)
-    inventaris.QtyTersedia = inventaris.QtyBarang
-
-    tx := db.Begin()
-    if err := tx.Create(&inventaris).Error; err != nil {
-        tx.Rollback()
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
-
-	hargaDepresiasi := int(float64(inventaris.HargaPembelian) * 0.025)
-    depresiasi := types.Depresiasi{
-        IdGudang:        inventaris.GudangID,
-        IdBarang:        inventaris.ID,
-        HargaDepresiasi: hargaDepresiasi,
-        Perbulan:        hargaDepresiasi,
-        Tahun:           hargaDepresiasi * 12,
-    }
-
-    if err := tx.Create(&depresiasi).Error; err != nil {
-        tx.Rollback()
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan depresiasi: " + err.Error()})
-        return
-    }
-
-    now := time.Now()
-    history := types.History{
-        Kategori:   "Barang Masuk",
-        Keterangan: fmt.Sprintf("Pada %s barang %s telah masuk ke gudang %s", now.Format("02-01-2006 15:04:05"), inventaris.NamaBarang, gudang.NamaGudang),
-        CreatedAt:  now,
-    }
-
-    if err := tx.Create(&history).Error; err != nil {
-        tx.Rollback()
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan history: " + err.Error()})
-        return
-    }
-
-    // Membuat Jadwal Depresiasi
-    nextRun := time.Now().AddDate(0, 1, 0)
-    jadwal := types.JadwalDepresiasi{
-        IdBarang: inventaris.ID,
-        NextRun:  nextRun,
-    }
-    if err := tx.Create(&jadwal).Error; err != nil {
-        tx.Rollback()
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan jadwal depresiasi: " + err.Error()})
-        return
-    }
-
-    // Commit transaction
-    if err := tx.Commit().Error; err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal commit: " + err.Error()})
-        return
-    }
-
-
-
-    c.JSON(http.StatusCreated, gin.H{
-        "inventaris": inventaris,
-        "depresiasi": depresiasi,
-        "history":    history,
-        "jadwal":     jadwal,
-    })
-}
 
 func ApplyDepresiasi(c *gin.Context) {
 	// Ambil koneksi ke database
@@ -306,3 +223,176 @@ func InitiateScheduler() {
 	// RunDepresiationScheduler(24 * time.Hour)
     RunDepresiationScheduler(1 * time.Hour)
 }
+
+// DeleteAllByTimeframe menghapus semua data pada rentang waktu tertentu dari semua tabel
+func DeleteAllByTimeframe(c *gin.Context) {
+    // Ambil data langsung dari request body
+    var requestBody map[string]string
+    if err := c.ShouldBindJSON(&requestBody); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+
+    startDate, err := time.Parse("2006-01-02", requestBody["start_date"])
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Format tanggal mulai tidak valid. Gunakan format YYYY-MM-DD"})
+        return
+    }
+
+    endDate, err := time.Parse("2006-01-02", requestBody["end_date"])
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Format tanggal akhir tidak valid. Gunakan format YYYY-MM-DD"})
+        return
+    }
+
+    endDate = endDate.Add(24 * time.Hour)
+
+    db := database.GetDB()
+    deletedCounts := make(map[string]int64)
+
+    // Daftar tabel dan field waktu masing-masing
+    tables := []struct {
+        name      string
+        model     interface{}
+        timeField string // Kolom yang digunakan untuk filter waktu
+    }{
+        {"sebaran_barang", &types.SebaranBarang{}, "created_at"},
+        {"depresiasi", &types.Depresiasi{}, "created_at"},
+        // JadwalDepresiasi sepertinya tidak memiliki kolom created_at, gunakan next_run
+        {"jadwal_depresiasi", &types.JadwalDepresiasi{}, "next_run"},
+        {"inventaris", &types.Inventaris{}, "created_at"},
+        {"user", &types.User{}, "created_at"},
+        {"divisi", &types.Divisi{}, "created_at"},
+        {"kategori", &types.Kategori{}, "created_at"},
+        {"gudang", &types.Gudang{}, "created_at"},
+        {"history", &types.History{}, "created_at"},
+    }
+
+    tx := db.Begin()
+    defer func() {
+        if r := recover(); r != nil {
+            tx.Rollback()
+        }
+    }()
+
+    for _, table := range tables {
+		// Gunakan field waktu yang sesuai untuk masing-masing tabel
+		deleteResult := tx.Where(table.timeField+" BETWEEN ? AND ?", startDate, endDate).Delete(table.model)
+		
+		if deleteResult.Error != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Gagal menghapus data di tabel " + table.name,
+				"message": deleteResult.Error.Error(),
+			})
+			return
+		}
+		
+		deletedCounts[table.name] = deleteResult.RowsAffected
+	}
+
+    // Tambahkan ke history
+    history := types.History{
+        Kategori:   "DELETE",
+        Keterangan: "Menghapus semua data dari " + requestBody["start_date"] + " hingga " + requestBody["end_date"],
+    }
+    
+    if err := tx.Create(&history).Error; err != nil {
+        tx.Rollback()
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error":   "Gagal mencatat history",
+            "message": err.Error(),
+        })
+        return
+    }
+
+    if err := tx.Commit().Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error":   "Gagal menyelesaikan transaksi",
+            "message": err.Error(),
+        })
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Semua data dalam rentang waktu berhasil dihapus",
+        "deleted": deletedCounts,
+    })
+}
+
+func UploadGambar(c *gin.Context) {
+	// Mendapatkan ID dari query parameter
+	id := c.DefaultQuery("id", "0")
+	log.Printf("Search for Inventaris with ID: %s", id)
+
+	// Mengambil data Inventaris berdasarkan ID
+	inv := types.Inventaris{}
+	db := database.GetDB() // Menggunakan GetDB untuk mendapatkan koneksi
+	if err := db.First(&inv, id).Error; err != nil {
+		log.Printf("Inventaris with ID %s not found: %v", id, err)
+		c.JSON(http.StatusNotFound, gin.H{"error": "Inventaris not found"})
+		return
+	}
+	log.Printf("Inventaris found: ID %s", id)
+
+	// Mendapatkan file gambar dari request
+	file, _ := c.FormFile("upload_nota")
+	if file == nil {
+		log.Println("No file uploaded")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
+		return
+	}
+	log.Printf("File uploaded: %s", file.Filename)
+
+	// Membuat folder penyimpanan dengan format: storage/tahun/bulan/hari
+	currentDate := time.Now()
+	storageDir := fmt.Sprintf("./storage/%d/%02d/%02d", currentDate.Year(), currentDate.Month(), currentDate.Day())
+
+	// Cek jika folder belum ada, buat foldernya
+	if _, err := os.Stat(storageDir); os.IsNotExist(err) {
+		err := os.MkdirAll(storageDir, os.ModePerm) // Menggunakan os.MkdirAll untuk membuat folder secara rekursif
+		if err != nil {
+			log.Printf("Failed to create storage directory: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create storage directory"})
+			return
+		}
+		log.Println("Storage directory created successfully")
+	}
+
+	// Membuat nama file berdasarkan nama_barang dan tanggal_pembelian
+	// Format nama file: nama_barang_tanggal_pembelian.ext
+	ext := filepath.Ext(file.Filename)
+	tanggalPembelian := inv.TanggalPembelian.Format("2006-01-02") // Format tanggal sesuai kebutuhan
+	newFileName := fmt.Sprintf("%s_%s%s", inv.NamaBarang, tanggalPembelian, ext)
+	log.Printf("Generated new file name: %s", newFileName)
+
+	// Menyimpan file ke folder storage
+	filePath := filepath.Join(storageDir, newFileName)
+	if err := c.SaveUploadedFile(file, filePath); err != nil {
+		log.Printf("Failed to save file: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+		return
+	}
+	log.Printf("File saved to: %s", filePath)
+
+	// Menyimpan path file di database
+	uploadNotaPath := filepath.ToSlash(filePath) // Path relative dari storage
+
+	// Update record Inventaris dengan path file yang baru
+	inv.UploadNota = uploadNotaPath
+	if err := db.Save(&inv).Error; err != nil {
+		log.Printf("Failed to update database: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update database"})
+		return
+	}
+	log.Println("Database updated with new file path")
+
+	// Menampilkan hasil yang berhasil
+	c.JSON(http.StatusOK, gin.H{
+		"message": "File uploaded successfully",
+		"file":    uploadNotaPath,
+	})
+}
+
+
+

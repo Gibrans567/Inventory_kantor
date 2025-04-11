@@ -35,7 +35,6 @@ type Inventaris struct {
     Gudang            Gudang    `gorm:"foreignKey:GudangID" json:"-"`  // One to Many
     Divisi            Divisi    `gorm:"foreignKey:DivisiID" json:"-"`  // One to Many
     Kategori          Kategori  `gorm:"foreignKey:KategoriID" json:"-"`  // One to Many
-    Depresiasi        []Depresiasi `gorm:"foreignKey:IdBarang" json:"-"`   // One to Many
     SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdBarang" json:"-"`   // Many to Many
 }
 
@@ -118,6 +117,10 @@ type JWTClaims struct {
     jwt.RegisteredClaims
 }
 
+type DeleteAllByTimeframeRequest struct {
+	StartDate string `json:"start_date" binding:"required"`
+	EndDate   string `json:"end_date" binding:"required"`
+}
 
 //audit
 

@@ -12,8 +12,8 @@ func SetupRouter() *gin.Engine {
 	// Depresiasi Routes
 	depresiasi := r.Group("/depresiasi")
 	{
-		depresiasi.POST("/", controller.CreateDepresiasi)
-		depresiasi.GET("/", controller.GetAllDepresiasi)
+		depresiasi.POST("", controller.CreateDepresiasi)
+		depresiasi.GET("", controller.GetAllDepresiasi)
 		depresiasi.PUT("/:id", controller.UpdateDepresiasi)
 		depresiasi.DELETE("/:id", controller.DeleteDepresiasi)
 	}
@@ -21,8 +21,8 @@ func SetupRouter() *gin.Engine {
 	// Divisi Routes
 	divisi := r.Group("/divisi")
 	{
-		divisi.POST("/", controller.CreateDivisi)
-		divisi.GET("/", controller.GetAllDivisi)
+		divisi.POST("", controller.CreateDivisi)
+		divisi.GET("", controller.GetAllDivisi)
 		divisi.PUT("/:id", controller.UpdateDivisi)
 		divisi.DELETE("/:id", controller.DeleteDivisi)
 	}
@@ -30,8 +30,8 @@ func SetupRouter() *gin.Engine {
 	// Gudang Routes
 	gudang := r.Group("/gudang")
 	{
-		gudang.POST("/", controller.CreateGudang)
-		gudang.GET("/", controller.GetAllGudang)
+		gudang.POST("", controller.CreateGudang)
+		gudang.GET("", controller.GetAllGudang)
 		gudang.POST("/update/:id", controller.UpdateGudang)
 		gudang.DELETE("/:id", controller.DeleteGudang)
 	}
@@ -39,8 +39,8 @@ func SetupRouter() *gin.Engine {
 	// Inventaris Routes
 	inventaris := r.Group("/inventaris")
 	{
-		inventaris.POST("/", controller.CreateInventaris1)
-		inventaris.GET("/", controller.GetAllInventaris)
+		inventaris.POST("", controller.CreateInventaris)
+		inventaris.GET("", controller.GetAllInventaris)
 		inventaris.GET("/:id", controller.GetInventarisById)
 		inventaris.PUT("/:id", controller.UpdateInventaris)
 		inventaris.DELETE("/:id", controller.DeleteInventaris)
@@ -49,8 +49,8 @@ func SetupRouter() *gin.Engine {
 	// Kategori Routes
 	kategori := r.Group("/kategori")
 	{
-		kategori.POST("/", controller.CreateKategori)
-		kategori.GET("/", controller.GetAllKategori)
+		kategori.POST("", controller.CreateKategori)
+		kategori.GET("", controller.GetAllKategori)
 		kategori.PUT("/:id", controller.UpdateKategori)
 		kategori.DELETE("/:id", controller.DeleteKategori)
 	}
@@ -58,8 +58,8 @@ func SetupRouter() *gin.Engine {
 	// SebaranBarang Routes
 	sebaranBarang := r.Group("/sebaranBarang")
 	{
-		sebaranBarang.POST("/", controller.CreateSebaranBarang)
-		sebaranBarang.GET("/", controller.GetAllSebaranBarang)
+		sebaranBarang.POST("", controller.CreateSebaranBarang)
+		sebaranBarang.GET("", controller.GetAllSebaranBarang)
 		sebaranBarang.PUT("/:id", controller.UpdateSebaranBarang)
 		sebaranBarang.DELETE("/:id", controller.DeleteSebaranBarang)
 	}
@@ -67,8 +67,8 @@ func SetupRouter() *gin.Engine {
 	// User Routes
 	user := r.Group("/user")
 	{
-		user.POST("/", controller.CreateUser)
-		user.GET("/", controller.GetUserByID)
+		user.POST("", controller.CreateUser)
+		user.GET("", controller.GetUserByID)
 		user.GET("/:id", controller.GetUserByID)
 		user.PUT("/:id", controller.UpdateUser)
 		user.DELETE("/:id", controller.DeleteUser)
@@ -76,8 +76,8 @@ func SetupRouter() *gin.Engine {
 	
 	historyRoutes := r.Group("/histories")
 	{
-		historyRoutes.POST("/", controller.CreateHistory)
-		historyRoutes.GET("/", controller.GetAllHistories)
+		historyRoutes.POST("", controller.CreateHistory)
+		historyRoutes.GET("", controller.GetAllHistories)
 		historyRoutes.GET("/:id", controller.GetHistoryByID)
 		historyRoutes.POST("/:id", controller.UpdateHistory)
 		historyRoutes.DELETE("/:id", controller.DeleteHistory)
@@ -85,9 +85,21 @@ func SetupRouter() *gin.Engine {
 
 	schedulerRoutes := r.Group("/scheduler")
 	{
-		schedulerRoutes.POST("/", controller.ApplyDepresiasi)
-		schedulerRoutes.GET("/", controller.GetAllJadwal)
+		schedulerRoutes.POST("", controller.ApplyDepresiasi)
+		schedulerRoutes.GET("", controller.GetAllJadwal)
 	}
+
+	DeleteRoutes := r.Group("/delete")
+	{
+		DeleteRoutes.POST("", controller.ApplyDepresiasi)
+		DeleteRoutes.DELETE("", controller.DeleteAllByTimeframe)
+	}
+
+	uploadRoutes := r.Group("/upload")
+	{
+		uploadRoutes.POST("", controller.UploadGambar)
+	}
+
 
 	// Auth group
 	auth := r.Group("/auth")

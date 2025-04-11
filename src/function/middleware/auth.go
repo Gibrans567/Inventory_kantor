@@ -70,7 +70,7 @@ func AuthMiddleware() gin.HandlerFunc {
         tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
         token, err := jwt.ParseWithClaims(tokenString, &types.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-            return []byte("SECRET_JWT_KEY"), nil
+            return []byte("InventoryAWH1029"), nil
         })
 
         if err != nil || !token.Valid {

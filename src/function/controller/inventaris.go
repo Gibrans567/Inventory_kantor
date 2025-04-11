@@ -14,118 +14,104 @@ import (
 
 // CreateInventaris - Menambahkan Inventaris baru dan mencatat depresiasi
 func CreateInventaris(c *gin.Context) {
-	var inventaris types.Inventaris
-	db := database.GetDB()
-	// Bind JSON request ke struct Inventaris
-	if err := c.ShouldBindJSON(&inventaris); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    var inventaris types.Inventaris
+    db := database.GetDB()
 
-	// Mengecek apakah GudangID ada dalam tabel Gudang
-	var gudang types.Gudang
-	if err := db.Where("id = ?", inventaris.GudangID).First(&gudang).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "GudangID tidak valid. Pastikan data ada di tabel Gudang.",
-		})
-		return
-	}
+    if err := c.ShouldBindJSON(&inventaris); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
 
-	// Mengecek apakah KategoriID ada dalam tabel Kategori
-	var kategori types.Kategori
-	if err := db.Where("id = ?", inventaris.KategoriID).First(&kategori).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "KategoriID tidak valid. Pastikan data ada di tabel Kategori.",
-		})
-		return
-	}
+    // Validation code remains the same...
+    var gudang types.Gudang
+    if err := db.Where("id = ?", inventaris.GudangID).First(&gudang).Error; err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "GudangID tidak valid"})
+        return
+    }
 
-	// Mengecualikan input untuk qty_terpakai
-	inventaris.QtyTerpakai = 0 // Mengatur qty_terpakai ke 0 jika tidak diinput
+    var kategori types.Kategori
+    if err := db.Where("id = ?", inventaris.KategoriID).First(&kategori).Error; err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "KategoriID tidak valid"})
+        return
+    }
 
-	// Menghitung total_nilai berdasarkan harga_pembelian dan qty_barang
-	inventaris.TotalNilai = inventaris.HargaPembelian * (inventaris.QtyBarang)
+	var divisi types.Divisi
+    if err := db.Where("id = ?", inventaris.DivisiID).First(&divisi).Error; err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "KategoriID tidak valid"})
+        return
+    }
 
-	// Mengatur qty_tersedia sama dengan qty_barang
-	inventaris.QtyTersedia = inventaris.QtyBarang
+	var user types.User
+    if err := db.Where("id = ?", inventaris.UserID).First(&user).Error; err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "KategoriID tidak valid"})
+        return
+    }
 
-	// Memulai transaksi database
-	tx := db.Begin()
-	
-	// Menyimpan data inventaris ke database
-	if err := tx.Create(&inventaris).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	
-	// Menghitung depresiasi (2.5% dari harga pembelian)
+    inventaris.QtyTerpakai = 0
+    inventaris.TotalNilai = inventaris.HargaPembelian * (inventaris.QtyBarang)
+    inventaris.QtyTersedia = inventaris.QtyBarang
+
+    tx := db.Begin()
+    if err := tx.Create(&inventaris).Error; err != nil {
+        tx.Rollback()
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+
 	hargaDepresiasi := int(float64(inventaris.HargaPembelian) * 0.025)
-	
-	// Membuat record depresiasi
-	depresiasi := types.Depresiasi{
-		IdGudang:        inventaris.GudangID,
-		IdBarang:        inventaris.ID,
-		HargaDepresiasi: hargaDepresiasi,
-		Perbulan:        hargaDepresiasi,  // Set default ke 1
-		Tahun:           hargaDepresiasi*12,  // Set default ke 1
-	}
-	
-	// Menyimpan data depresiasi ke database
-	if err := tx.Create(&depresiasi).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan data depresiasi: " + err.Error()})
-		return
-	}
-	
-	// Mendapatkan username dari konteks (sesuaikan dengan cara Anda menyimpan informasi user)
-	// Contoh jika menggunakan JWT atau session untuk menyimpan username
-	username := "admin" // Default jika tidak ada
-	if user, exists := c.Get("user"); exists {
-		// Sesuaikan dengan struktur user Anda
-		// Contoh: username = user.(types.User).Username
-		// Atau: username = user.(string)
-		if userObj, ok := user.(map[string]interface{}); ok {
-			if usernameVal, exists := userObj["username"]; exists {
-				username = usernameVal.(string)
-			}
-		}
-	}
+    depresiasi := types.Depresiasi{
+        IdGudang:        inventaris.GudangID,
+        IdBarang:        inventaris.ID,
+        HargaDepresiasi: hargaDepresiasi,
+        Perbulan:        hargaDepresiasi,
+        Tahun:           hargaDepresiasi * 12,
+    }
 
-	// Membuat catatan history
-	now := time.Now()
-	historyKeterangan := fmt.Sprintf("Pada %s barang %s telah masuk sebanyak %d ke gudang %s oleh %s", 
-		now.Format("02-01-2006 15:04:05"),
-		inventaris.NamaBarang,
-		inventaris.QtyBarang,
-		gudang.NamaGudang,  // Menggunakan nama gudang yang diambil dari database
-		username)
-	
-	history := types.History{
-		Kategori:   "Barang Masuk",
-		Keterangan: historyKeterangan,
-		CreatedAt:  now,
-	}
-	
-	// Menyimpan data history ke database
-	if err := tx.Create(&history).Error; err != nil {
-		tx.Rollback()
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyimpan data history: " + err.Error()})
-		return
-	}
-	
-	// Commit transaksi
-	if err := tx.Commit().Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal melakukan commit transaksi: " + err.Error()})
-		return
-	}
+    if err := tx.Create(&depresiasi).Error; err != nil {
+        tx.Rollback()
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan depresiasi: " + err.Error()})
+        return
+    }
 
-	// Mengirimkan respon jika berhasil
-	c.JSON(http.StatusCreated, gin.H{
-		"inventaris": inventaris,
-		"depresiasi": depresiasi,
-		"history": history,
-	})
+    now := time.Now()
+    history := types.History{
+        Kategori:   "Barang Masuk",
+        Keterangan: fmt.Sprintf("Pada %s barang %s telah masuk ke gudang %s oleh %s dari Divisi %s ", now.Format("02-01-2006 15:04:05"), inventaris.NamaBarang, gudang.NamaGudang, user.Name,divisi.NamaDivisi),
+        CreatedAt:  now,
+    }
+
+    if err := tx.Create(&history).Error; err != nil {
+        tx.Rollback()
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan history: " + err.Error()})
+        return
+    }
+
+    // Membuat Jadwal Depresiasi
+    nextRun := time.Now().AddDate(0, 1, 0)
+    jadwal := types.JadwalDepresiasi{
+        IdBarang: inventaris.ID,
+        NextRun:  nextRun,
+    }
+    if err := tx.Create(&jadwal).Error; err != nil {
+        tx.Rollback()
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan jadwal depresiasi: " + err.Error()})
+        return
+    }
+
+    // Commit transaction
+    if err := tx.Commit().Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal commit: " + err.Error()})
+        return
+    }
+
+
+
+    c.JSON(http.StatusCreated, gin.H{
+        "inventaris": inventaris,
+        "depresiasi": depresiasi,
+        "history":    history,
+        "jadwal":     jadwal,
+    })
 }
 
 // GetAllInventaris - Mendapatkan semua data Inventaris
