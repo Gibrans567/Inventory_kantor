@@ -21,6 +21,7 @@ type Inventaris struct {
     KategoriID        uint      `json:"kategori_id"`
     DivisiID          uint      `json:"divisi_id"`
     UserID            int      `json:"user_id"`
+    Role              string    `json:"role"`
     NamaBarang        string    `json:"nama_barang"`
     QtyBarang         int       `json:"qty_barang"`
     HargaPembelian    int`json:"harga_pembelian"`
@@ -53,7 +54,7 @@ type User struct {
     IdDivisi          uint      `json:"id_divisi"`
     Email             string    `json:"email" binding:"required,email"`
     Password          string    `json:"password"`
-    Name          string    `json:"nama_user"`
+    Name              string    `json:"nama_user"`
     Role              string    `json:"role"`
     CreatedAt         time.Time
     UpdatedAt         time.Time

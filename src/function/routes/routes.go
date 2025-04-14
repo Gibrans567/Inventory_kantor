@@ -41,7 +41,7 @@ func SetupRouter() *gin.Engine {
 	{
 		inventaris.POST("", controller.CreateInventaris)
 		inventaris.GET("", controller.GetAllInventaris)
-		inventaris.GET("/:id", controller.GetInventarisById)
+		inventaris.GET("/:nama_divisi", controller.GetInventarisByDivisiName)
 		inventaris.PUT("/:id", controller.UpdateInventaris)
 		inventaris.DELETE("/:id", controller.DeleteInventaris)
 	}

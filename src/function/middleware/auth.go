@@ -50,13 +50,13 @@ func GenerateJWT(user types.User) (string, error) {
         Email:  user.Email,
         Role:   user.Role,
         RegisteredClaims: jwt.RegisteredClaims{
-            ExpiresAt: jwt.NewNumericDate(time.Now().Add(2 * time.Hour)),
+            ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)), // Token berlaku selama 1 hari
             IssuedAt:  jwt.NewNumericDate(time.Now()),
         },
     }
 
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    return token.SignedString([]byte("SECRET_JWT_KEY"))
+    return token.SignedString([]byte("7b7a4159f6d56da06e2033d33c411b6482743cde")) // Ganti dengan secret key yang lebih aman
 }
 
 func AuthMiddleware() gin.HandlerFunc {

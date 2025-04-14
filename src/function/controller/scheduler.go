@@ -10,6 +10,7 @@ import (
     "log"
 
 
+
 	"os"
 	"path/filepath"
 )
@@ -393,6 +394,3 @@ func UploadGambar(c *gin.Context) {
 		"file":    uploadNotaPath,
 	})
 }
-
-
-
