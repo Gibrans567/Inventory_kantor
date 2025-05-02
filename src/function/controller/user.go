@@ -40,6 +40,22 @@ func GetUserByID(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
+func GetAllUsers(c *gin.Context) {
+    var users []types.User
+    db := database.GetDB()
+
+    // Ambil semua user dari database
+    result := db.Find(&users)
+    if result.Error != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users"})
+        return
+    }
+
+    // Kembalikan response dengan status OK dan data users
+    c.JSON(http.StatusOK, users)
+}
+
+
 // UpdateUser - Mengupdate data User
 func UpdateUser(c *gin.Context) {
 	id := c.Param("id")

@@ -21,7 +21,7 @@ func CreateInventaris(c *gin.Context) {
         c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
         return
     }
-
+    
     // Validation code remains the same...
     var gudang types.Gudang
     if err := db.Where("id = ?", inventarisInput.GudangID).First(&gudang).Error; err != nil {
@@ -42,12 +42,12 @@ func CreateInventaris(c *gin.Context) {
     }
 
     var user types.User
-	if err := db.Where("id = ?", inventarisInput.UserID).First(&user).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "UserID tidak valid"})
-		return
-	}
+    if err := db.Where("id = ?", inventarisInput.UserID).First(&user).Error; err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "UserID tidak valid"})
+        return
+    }
 
-	inventarisInput.Role = user.Role
+    inventarisInput.Role = user.Role
 
     tx := db.Begin()
 
@@ -78,7 +78,6 @@ func CreateInventaris(c *gin.Context) {
             "harga_pembelian": newHargaPembelian,
             "total_nilai": newTotalNilai,
             "updated_at": time.Now(),
-			
         }
         
         if err := tx.Model(&existingInventaris).Updates(updates).Error; err != nil {
@@ -186,6 +185,7 @@ func CreateInventaris(c *gin.Context) {
         "inventaris": inventaris,
         "history":    history,
         "is_new_item": isNewItem,
+		"message" : "Inventaris berhasil ditambahkan",
     }
     
     // Only include depresiasi and jadwal info for new items
@@ -203,6 +203,7 @@ func CreateInventaris(c *gin.Context) {
 
     c.JSON(http.StatusCreated, responseData)
 }
+
 
 // GetAllInventaris - Mendapatkan semua data Inventaris
 func GetAllInventaris(c *gin.Context) {
@@ -243,7 +244,7 @@ func GetAllInventaris(c *gin.Context) {
         })
     }
 
-    c.JSON(http.StatusOK, result)
+    c.JSON(http.StatusOK, gin.H{ "data":    result})
 }
 
 // GetInventarisById - Mendapatkan data Inventaris berdasarkan ID dan data SebaranBarang terkait
@@ -697,5 +698,72 @@ func GetInventarisByDivisiName(c *gin.Context) {
 		result["items"] = items
 	}
 
-	c.JSON(http.StatusOK, result)
+	c.JSON(http.StatusOK,gin.H{ "data":    result})
+}
+
+func GetInventarisByNama(c *gin.Context) {
+    // Mendapatkan nama_barang dari parameter URL
+    namaBarang := c.Param("nama_barang")
+    
+    // Validasi nama_barang
+    if namaBarang == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Nama barang tidak boleh kosong"})
+        return
+    }
+    
+    var inventaris types.Inventaris
+    db := database.GetDB()
+    
+    // Mengambil data inventaris berdasarkan nama_barang dan menampilkan nama Gudang, Kategori, dan Divisi
+    if err := db.Preload("Gudang", func(db *gorm.DB) *gorm.DB {
+        return db.Select("id, nama_gudang")  // Hanya mengambil id dan nama_gudang dari Gudang
+    }).Preload("Kategori", func(db *gorm.DB) *gorm.DB {
+        return db.Select("id, nama_kategori")  // Hanya mengambil id dan nama_kategori dari Kategori
+    }).Preload("Divisi", func(db *gorm.DB) *gorm.DB {
+        return db.Select("id, nama_divisi")  // Hanya mengambil id dan nama_divisi dari Divisi
+    }).Where("nama_barang = ?", namaBarang).First(&inventaris).Error; err != nil {
+        if err == gorm.ErrRecordNotFound {
+            c.JSON(http.StatusNotFound, gin.H{"error": "Data inventaris tidak ditemukan"})
+        } else {
+            c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        }
+        return
+    }
+    
+    // Mengambil semua data sebaran barang yang memiliki id_barang yang sama
+    var sebaranBarang []types.SebaranBarang
+    if err := db.Where("id_barang = ?", inventaris.ID).Find(&sebaranBarang).Error; err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    
+    // Format waktu yang konsisten
+    createdAt := inventaris.CreatedAt.Format(time.RFC3339)
+    updatedAt := inventaris.UpdatedAt.Format(time.RFC3339)
+    tanggalPembelian := inventaris.TanggalPembelian.Format(time.RFC3339)
+    
+    // Menyiapkan hasil yang berisi data inventaris dengan nama gudang, kategori, dan divisi
+    result := gin.H{
+        "id":                 inventaris.ID,
+        "tanggal_pembelian":  tanggalPembelian,
+        "gudang_id":          inventaris.GudangID,
+        "gudang_nama":        inventaris.Gudang.NamaGudang,     // Nama Gudang
+        "kategori_id":        inventaris.KategoriID,
+        "kategori_nama":      inventaris.Kategori.NamaKategori, // Nama Kategori
+        "divisi_id":          inventaris.DivisiID,              // ID Divisi
+        "divisi_nama":        inventaris.Divisi.NamaDivisi,     // Nama Divisi
+        "nama_barang":        inventaris.NamaBarang,
+        "qty_barang":         inventaris.QtyBarang,
+        "qty_terpakai":       inventaris.QtyTerpakai,
+        "qty_tersedia":       inventaris.QtyTersedia,
+        "harga_pembelian":    inventaris.HargaPembelian,
+        "spesifikasi":        inventaris.Spesifikasi,
+        "total_nilai":        inventaris.TotalNilai,
+        "upload_nota":        inventaris.UploadNota,
+        "created_at":         createdAt,
+        "updated_at":         updatedAt,
+        "sebaran_barang":     sebaranBarang,                    // Data sebaran barang di akhir
+    }
+
+    c.JSON(http.StatusOK, result)
 }

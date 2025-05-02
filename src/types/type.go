@@ -1,7 +1,9 @@
 package types
 
 import ("time"
-    "github.com/golang-jwt/jwt/v5"
+        "github.com/golang-jwt/jwt/v5"
+
+        "encoding/json"
 )
 type Gudang struct {
     ID           uint        `json:"id" gorm:"primaryKey"`
@@ -20,15 +22,15 @@ type Inventaris struct {
     GudangID          uint      `json:"gudang_id"`
     KategoriID        uint      `json:"kategori_id"`
     DivisiID          uint      `json:"divisi_id"`
-    UserID            int      `json:"user_id"`
+    UserID            int       `json:"user_id"`
     Role              string    `json:"role"`
     NamaBarang        string    `json:"nama_barang"`
     QtyBarang         int       `json:"qty_barang"`
-    HargaPembelian    int`json:"harga_pembelian"`
+    HargaPembelian    int       `json:"harga_pembelian"`
     Spesifikasi       string    `json:"spesifikasi"`
     QtyTersedia       int       `json:"qty_tersedia"`
     QtyTerpakai       int       `json:"qty_terpakai"`
-    TotalNilai        int `json:"total_nilai"`
+    TotalNilai        int       `json:"total_nilai"`
     UploadNota        string    `json:"upload_nota"`  // Menyimpan path file nota
     CreatedAt         time.Time
     UpdatedAt         time.Time
@@ -38,6 +40,31 @@ type Inventaris struct {
     Kategori          Kategori  `gorm:"foreignKey:KategoriID" json:"-"`  // One to Many
     SebaranBarang     []SebaranBarang `gorm:"foreignKey:IdBarang" json:"-"`   // Many to Many
 }
+
+// Custom unmarshalling to handle date parsing
+func (i *Inventaris) UnmarshalJSON(data []byte) error {
+    type Alias Inventaris
+    aux := &struct {
+        TanggalPembelian string `json:"tanggal_pembelian"`
+        *Alias
+    }{
+        Alias: (*Alias)(i),
+    }
+
+    if err := json.Unmarshal(data, &aux); err != nil {
+        return err
+    }
+
+    // Manually parse TanggalPembelian field
+    parsedDate, err := time.Parse("2006-01-02", aux.TanggalPembelian)
+    if err != nil {
+        return err
+    }
+    i.TanggalPembelian = parsedDate
+
+    return nil
+}
+
 
 type Divisi struct {
     ID                uint      `json:"id" gorm:"primaryKey"`

@@ -1,13 +1,12 @@
 package routes
 
 import (
-	"inventory/src/function/controller"
 	"github.com/gin-gonic/gin"
+	"inventory/src/function/controller"
 	"inventory/src/function/middleware"
 )
 
-func SetupRouter() *gin.Engine {
-	r := gin.Default()
+func SetupRouter(r *gin.Engine){
 
 	// Depresiasi Routes
 	depresiasi := r.Group("/depresiasi")
@@ -42,6 +41,7 @@ func SetupRouter() *gin.Engine {
 		inventaris.POST("", controller.CreateInventaris)
 		inventaris.GET("", controller.GetAllInventaris)
 		inventaris.GET("/:nama_divisi", controller.GetInventarisByDivisiName)
+		inventaris.GET("barang/:nama_divisi", controller.GetInventarisByDivisiName)
 		inventaris.PUT("/:id", controller.UpdateInventaris)
 		inventaris.DELETE("/:id", controller.DeleteInventaris)
 	}
@@ -68,12 +68,12 @@ func SetupRouter() *gin.Engine {
 	user := r.Group("/user")
 	{
 		user.POST("", controller.CreateUser)
-		user.GET("", controller.GetUserByID)
+		user.GET("", controller.GetAllUsers)
 		user.GET("/:id", controller.GetUserByID)
 		user.PUT("/:id", controller.UpdateUser)
 		user.DELETE("/:id", controller.DeleteUser)
 	}
-	
+
 	historyRoutes := r.Group("/histories")
 	{
 		historyRoutes.POST("", controller.CreateHistory)
@@ -100,19 +100,18 @@ func SetupRouter() *gin.Engine {
 		uploadRoutes.POST("", controller.UploadGambar)
 	}
 
-
 	// Auth group
 	auth := r.Group("/auth")
 	{
 		auth.POST("/login", middleware.LoginHandler)
+		auth.POST("/register", middleware.RegisterHandler)
 	}
 
 	// Protected route
 	api := r.Group("/api")
 	api.Use(middleware.AuthMiddleware())
 	{
-		api.POST("/pegawai", middleware.RequireRole("pegawai"),  middleware.LogoutHandler)
+		api.POST("/pegawai", middleware.RequireRole("pegawai"), middleware.LogoutHandler)
 	}
 
-	return r
 }

@@ -41,7 +41,11 @@ func LoginHandler(c *gin.Context) {
         return
     }
 
-    c.JSON(http.StatusOK, gin.H{"token": token})
+    c.JSON(http.StatusOK, gin.H{"token": token, "message": "Login successful","user": gin.H{
+        "id":       user.ID,
+        "role":     user.Role,  // Assuming user.Role exists in your User struct
+        "division_id": user.IdDivisi,  // Add division_id or tenant_id if applicable
+    },})
 }
 
 func GenerateJWT(user types.User) (string, error) {
@@ -70,7 +74,7 @@ func AuthMiddleware() gin.HandlerFunc {
         tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
         token, err := jwt.ParseWithClaims(tokenString, &types.JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
-            return []byte("InventoryAWH1029"), nil
+            return []byte("7b7a4159f6d56da06e2033d33c411b6482743cde"), nil
         })
 
         if err != nil || !token.Valid {
