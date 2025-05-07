@@ -1,0 +1,1 @@
+var s=class{static isEmptyInputValue(r){return r==null||r.length===0}static mustMatch(r,l){return e=>{let u=e.get(r),t=e.get(l);if(!u||!t||(t.hasError("mustMatch")&&(delete t.errors.mustMatch,t.updateValueAndValidity()),this.isEmptyInputValue(t.value)||u.value===t.value))return null;let n={mustMatch:!0};return t.setErrors(n),n}}};export{s as a};
