@@ -46,6 +46,8 @@ export class AddInventarisComponent {
     kategoriList: any[] = []
     divisiList: any[] = []
     userList: any[] = []
+    selectedFile: File | null = null;
+    imageError: string | null = null;
 
 
     constructor(
@@ -70,7 +72,8 @@ export class AddInventarisComponent {
             gudang_id: [null, Validators.required],
             kategori_id: [null, Validators.required],
             divisi_id: [null, Validators.required],
-            user_id: [null, Validators.required]
+            user_id: [null, Validators.required],
+            upload_nota: [null ,Validators.required] // Tambahkan field untuk upload_nota
         });
 
         this.platform.backButton.subscribeWithPriority(10, () => {
@@ -115,8 +118,19 @@ export class AddInventarisComponent {
                 user_id: Number(this.inventarisForm.value.user_id)
             };
 
+            // Kirim data ke API untuk membuat inventaris
             const dataPost = await this._apiService.post('/inventaris', formData);
             console.log(dataPost);
+
+            // Ambil ID inventaris yang baru dibuat dari respons
+            const inventarisId = dataPost.inventaris.id;  // Pastikan `id` ada di sini
+
+            if (inventarisId) {
+                // Jika ada gambar yang dipilih, lakukan upload
+                if (this.selectedFile) {
+                    await this.uploadImage(inventarisId);  // Kirim ID yang benar untuk upload
+                }
+            }
 
             this.dialogRef.close('refresh');
             this._tableUsersService.fetchData();
@@ -126,6 +140,26 @@ export class AddInventarisComponent {
             this.isLoading = false;
         }
     }
+
+
+    // Fungsi untuk menangani pemilihan file
+    onFileSelected(event: any) {
+        const file = event.target.files[0];
+        if (file) {
+            // Cek apakah file yang dipilih adalah gambar
+            if (file.type.startsWith('image/')) {
+                this.selectedFile = file;
+                this.imageError = null;  // Reset error jika file valid
+
+                // Menyimpan file yang dipilih ke dalam form control 'upload_nota'
+                this.inventarisForm.get('upload_nota')?.setValue(file);
+            } else {
+                this.selectedFile = null;
+                this.imageError = 'Hanya file gambar yang diperbolehkan';
+            }
+        }
+    }
+
 
     convertToISOString(date: any): string {
         if (date) {
@@ -180,25 +214,78 @@ export class AddInventarisComponent {
     formatCurrency(event: any): void {
         let value = event.target.value;
 
-        // Remove all non-digit characters
-        value = value.replace(/\D/g, '');
+        // Menghapus semua karakter non-digit, termasuk koma dan titik
+        value = value.replace(/\D/g, '');  // Menghapus semua karakter non-digit
 
-        // Convert to number and format with thousand separators
+        // Jika ada value yang dimasukkan, konversi menjadi angka
         if (value) {
-            // Convert to number
             const numValue = Number(value);
 
-            // Format with thousand separators (using locale ID for Indonesian formatting)
-            const formattedValue = numValue.toLocaleString('id-ID');
-
-            // Update the form control with the raw numeric value (without formatting)
+            // Menampilkan angka tanpa format ribuan di form
             this.inventarisForm.get('harga_pembelian').setValue(numValue, { emitEvent: false });
 
-            // Update the displayed value with formatting
+            // Update tampilan dengan format ribuan (untuk menampilkan di input)
+            const formattedValue = numValue.toLocaleString('id-ID');
             event.target.value = formattedValue;
         } else {
             this.inventarisForm.get('harga_pembelian').setValue(null, { emitEvent: false });
         }
     }
+
+
+
+    async uploadImage(inventarisId: number) {
+        if (!this.selectedFile) {
+            console.error('No file selected');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('upload_nota', this.selectedFile, this.selectedFile.name);
+
+        try {
+            // Upload gambar ke API
+            const response = await this._apiService.post(`/upload?id=${inventarisId}`, formData);
+
+            // Log response to check the data
+            console.log('Upload response:', response);
+
+            if (response && response.file) {
+                // Update the form with the URL returned from the server
+                this.inventarisForm.get('upload_nota')?.setValue(response.file);
+
+                // Show success message
+                this.showSuccessDialog('Gambar berhasil diupload');
+            }
+        } catch (error) {
+            console.error('Gagal mengupload gambar:', error);
+            this.imageError = 'Gagal mengupload gambar';
+        }
+    }
+
+    
+    showSuccessDialog(message: string) {
+        this.fuseConfirmationService.open({
+            title: 'Berhasil',
+            message: message,
+            icon: {
+                show: true,
+                name: 'heroicons_outline:check-circle',
+                color: 'success'
+            },
+            actions: {
+                confirm: {
+                    label: 'OK',
+                    color: 'primary'
+                },
+                cancel: {
+                    show: false
+                }
+            },
+            dismissible: true
+        });
+    }
+
+
 
 }

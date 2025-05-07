@@ -136,7 +136,7 @@
                     <mat-header-cell *matHeaderCellDef mat-sort-header> Action </mat-header-cell>
                     <mat-cell *matCellDef="let element" class="px-2 sm:px-6 flex items-center">
                         <!-- Action Buttons -->
-                        <a (click)="deleteUser(element.name)"
+                        <a (click)="deleteInventaris(element.id)"
                             class="font-medium mx-1 text-white dark:text-white bg-red-500 hover:cursor-pointer hover:bg-red-600 rounded hover:underline">
                             <mat-icon svgIcon="heroicons_solid:trash" class="text-white"
                                 style="transform: scale(0.7);"></mat-icon>
@@ -159,7 +159,7 @@
             </mat-table>
         </div>
 
-        <mat-paginator #paginator [pageSize]="10" [length]="dataSource.data.length" [pageSizeOptions]="[5, 10, 20]"
+        <mat-paginator #paginator [pageSize]="5" [length]="dataSource.data.length" [pageSizeOptions]="[5, 10, 20]"
             [showFirstLastButtons]="true">
         </mat-paginator>
     </fuse-card>

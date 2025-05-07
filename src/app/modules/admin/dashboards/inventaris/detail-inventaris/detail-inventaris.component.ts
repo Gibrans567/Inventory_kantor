@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { AddSebaranBarangComponent } from 'app/modules/admin/dashboards/sebaran-barang/add-sebaran-barang/add-sebaran-barang.component';
+import { FuseConfirmationService } from '@fuse/services/confirmation';
 
 
 
@@ -41,9 +42,13 @@ import { AddSebaranBarangComponent } from 'app/modules/admin/dashboards/sebaran-
   styleUrl: './detail-inventaris.component.scss'
 })
 export class DetailInventarisComponent {
-    // name: string | null = null;
-    // usersData: any
-    name: string | null; // Simulated route parameter for example
+    displayedColumns: string[] = ['barang', 'user', 'qty_barang', 'posisi_awal', 'posisi_akhir'];
+    dataSource = new MatTableDataSource<any>([]);
+
+    @ViewChild(MatPaginator) paginator: MatPaginator;
+    @ViewChild(MatSort) sort: MatSort;
+
+    name: string | null;
     barangData: any;
     sebaranBarang: any;
     id: string| null = null;
@@ -54,17 +59,19 @@ export class DetailInventarisComponent {
         private _apiService: ApiService,
         private route: ActivatedRoute,
         private _matDialog: MatDialog,
+        private _fuseConfirmationService: FuseConfirmationService,
     ) { }
 
     ngOnInit(): void {
+        // Ambil data barang dan riwayat
         this.route.paramMap.subscribe(params => {
-            this.id = params.get("id")
+            this.id = params.get("id");
 
             if (this.id) {
-                this.getBarangById(this.id)
-                this.getRiwayatBarangById(this.id)
+                this.getBarangById(this.id);
+                this.getRiwayatBarangById(this.id);
             }
-        })
+        });
     }
 
 
@@ -90,7 +97,7 @@ export class DetailInventarisComponent {
                 tanggal_pembelian: barangData.tanggal_pembelian || 'Memuat Data....',
                 total_nilai: barangData.total_nilai || 'Memuat Data....',
                 sebaran_barang: barangData.sebaran_barang || [],
-                upload_nota: "http://localhost:8080/" + barangData.upload_nota || 'Memuat Data....',
+                upload_nota: barangData.upload_nota || 'Memuat Data....',
                 created_at: barangData.created_at || 'Memuat Data....',
                 updated_at: barangData.updated_at || 'Memuat Data....',
                 divisi_id: barangData.divisi_id || 'Memuat Data....',
@@ -125,11 +132,7 @@ export class DetailInventarisComponent {
 
     async getRiwayatBarangById(id: string) {
         try {
-            // Fetch data from the API
             const riwayatData = await this._apiService.get(`/sebaranBarang/${id}`);
-            console.log(riwayatData);
-
-            // Mapping API data to output format
             this.sebaranBarang = riwayatData.map(item => ({
                 barang: item.nama_barang || 'Belum Ada Barang',
                 createdAt: item.created_at || 'Belum Ada Barang',
@@ -137,24 +140,18 @@ export class DetailInventarisComponent {
                 posisi_akhir: item.posisi_akhir || 'Belum Ada Barang',
                 posisi_awal: item.posisi_awal || 'Tidak Memiliki Posisi Awal',
                 qty_barang: item.qty_barang || 'Belum Ada Barang',
-                updatedAt: item.updated_at || 'Belum Ada Barang', // Jika ada, kalau tidak bisa dihapus
+                updatedAt: item.updated_at || 'Belum Ada Barang',
                 user: item.nama || 'Belum Ada Barang'
             }));
 
+            // Set data ke dataSource
+            this.dataSource.data = this.sebaranBarang;
+            this.dataSource.paginator = this.paginator;
+            this.dataSource.sort = this.sort;
+
         } catch (error) {
             console.error('Gagal memuat data riwayat barang:', error);
-
-            // Default values when data is loading or there's an error
-            this.sebaranBarang = [{
-                barang: 'Belum Ada Barang',
-                createdAt: 'Belum Ada Barang',
-                divisi: 'Belum Ada Barang',
-                posisi_akhir: 'Belum Ada Barang',
-                posisi_awal: 'Belum Ada Barang',
-                qty_barang: 'Belum Ada Barang',
-                updatedAt: 'Belum Ada Barang',
-                user: 'Belum Ada Barang'
-            }];
+            this.sebaranBarang = [{ /* Default data */ }];
         }
     }
 
@@ -176,5 +173,47 @@ export class DetailInventarisComponent {
             console.error('ID barang atau data tidak tersedia');
         }
     }
+
+
+    applySearchFilter(search: string): void {
+        this.dataSource.filter = search.trim().toLowerCase();
+
+        if (this.dataSource.paginator) {
+            this.dataSource.paginator.firstPage();
+        }
+    }
+
+    checkQtyBeforeSubmit() {
+        if (this.barangData?.qty_tersedia === 0 || this.barangData?.qty_tersedia === 'Barang Sudah Terpakai Semua') {
+          // Menampilkan pop-up jika stok barang sudah habis
+          this.showErrorDialog('Barang sudah terpakai semua. Tidak bisa menambahkan distribusi.');
+        } else {
+          // Melanjutkan ke fungsi untuk menambahkan distribusi barang
+          this.TambahSebaranBarang();
+        }
+      }
+
+      showErrorDialog(message: string) {
+        this._fuseConfirmationService.open({
+          title: 'Peringatan',
+          message: message,
+          icon: {
+            show: true,
+            name: 'heroicons_outline:x-circle',
+            color: 'error'
+          },
+          actions: {
+            confirm: {
+              label: 'OK',
+              color: 'warn'
+            },
+            cancel: {
+              show: false
+            }
+          },
+          dismissible: true
+        });
+      }
+
 
 }

@@ -53,7 +53,11 @@
                     <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('qty_barang')?.hasError('required') && inventarisForm.get('qty_barang')?.touched">
                         Jumlah harus diisi
                     </div>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('qty_barang')?.hasError('max') && inventarisForm.get('qty_barang')?.touched">
+                        Jumlah tidak boleh melebihi stok yang tersedia ({{ barangDetail?.qty_tersedia }}).
+                    </div>
                 </div>
+
 
                 <!-- Posisi Awal -->
                 <div class="w-full">
@@ -62,7 +66,7 @@
                         class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                         formControlName="posisi_awal"
                         placeholder="Posisi awal barang (opsional)"
-                    >
+                        [readonly]="true" >
                 </div>
 
                 <!-- Posisi Akhir -->
@@ -107,7 +111,7 @@
                     >
                         <option value="" disabled selected>Pilih pengguna</option>
                         <option *ngFor="let user of userList" [value]="user.id">
-                            {{ user.nama }}
+                            {{ user.nama_user }}
                         </option>
                     </select>
                     <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('user_id')?.hasError('required') && inventarisForm.get('user_id')?.touched">

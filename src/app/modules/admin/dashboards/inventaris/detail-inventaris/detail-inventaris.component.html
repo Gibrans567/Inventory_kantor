@@ -47,7 +47,7 @@
                         </tr>
                         <tr>
                             <td class="px-4 py-2 font-bold">Harga Pembelian</td>
-                            <td class="px-4 py-2">{{ barangData?.harga_pembelian | currency:'IDR' }}</td>
+                            <td class="px-4 py-2">{{ barangData?.harga_pembelian | currency:'IDR ' }}</td>
                         </tr>
                         <tr>
                             <td class="px-4 py-2 font-bold">Barang Tersedia</td>
@@ -63,10 +63,10 @@
                         </tr>
                         <tr>
                             <td class="px-4 py-2 font-bold">Total Harga</td>
-                            <td class="px-4 py-2">{{ barangData?.total_nilai | currency:'IDR' }}</td>
+                            <td class="px-4 py-2">{{ barangData?.total_nilai | currency:'IDR ' }}</td>
                         </tr>
                         <tr>
-                            <td class="px-4 py-2 font-bold">Induk gudang</td>
+                            <td class="px-4 py-2 font-bold">Penempatan</td>
                             <td class="px-4 py-2">{{ barangData?.nama_gudang}}</td>
                         </tr>
                     </table>
@@ -88,37 +88,58 @@
         <fuse-card class="shadow-md border-[1px] width-full">
             <div class="p-6 w-full">
                 <h2 class="text-xl font-semibold mb-4">Riwayat Sebaran Barang</h2>
+                <input type="text" [disabled]="isLoading" matInput (keyup)="applySearchFilter($event.target.value)"
+                    class="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    placeholder="Cari Divisi">
 
                 <!-- Tombol di pojok kanan atas -->
                 <div class="flex justify-end mb-4">
-                    <a [disabled]="isLoading" (click)="TambahSebaranBarang()"  mat-flat-button [color]="'primary'">
+                    <a [disabled]="isLoading || barangData?.qty_tersedia === 0 || barangData?.qty_tersedia === 'Barang Sudah Terpakai Semua'"
+                       (click)="checkQtyBeforeSubmit()"
+                       mat-flat-button
+                       [color]="'primary'">
                         <mat-icon class="icon-size-5" [svgIcon]="'person_add_alt_1'"></mat-icon>
-                        <span class="block ml-2">Tambahkan Barang</span>
+                        <span class="block ml-2">Tambahkan Distribusi Barang</span>
                     </a>
                 </div>
 
-                <!-- Tabel Riwayat Barang -->
+
+                <!-- Tabel Riwayat Barang dengan MatTable -->
                 <div class="overflow-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr>
-                                <th class="px-4 py-2">Nama Barang</th>
-                                <th class="px-4 py-2">Nama User</th>
-                                <th class="px-4 py-2">Qty</th>
-                                <th class="px-4 py-2">Posisi Awal</th>
-                                <th class="px-4 py-2">Posisi Akhir</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let item of sebaranBarang">
-                                <td class="px-4 py-2 text-center">{{ item.barang }}</td>
-                                <td class="px-4 py-2 text-center">{{ item.user }}</td>
-                                <td class="px-4 py-2 text-center">{{ item.qty_barang }}</td>
-                                <td class="px-4 py-2 text-center">{{ item.posisi_awal }}</td>
-                                <td class="px-4 py-2 text-center">{{ item.posisi_akhir }}</td>
-                            </tr>
-                        </tbody>
+                    <table mat-table [dataSource]="dataSource" matSort class="w-full">
+                        <!-- Column Definitions -->
+                        <ng-container matColumnDef="barang">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Nama Barang</th>
+                            <td mat-cell *matCellDef="let element">{{ element.barang }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="user">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Nama User</th>
+                            <td mat-cell *matCellDef="let element">{{ element.user }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="qty_barang">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Qty</th>
+                            <td mat-cell *matCellDef="let element">{{ element.qty_barang }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="posisi_awal">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Posisi Awal</th>
+                            <td mat-cell *matCellDef="let element">{{ element.posisi_awal }}</td>
+                        </ng-container>
+
+                        <ng-container matColumnDef="posisi_akhir">
+                            <th mat-header-cell *matHeaderCellDef mat-sort-header>Posisi Akhir</th>
+                            <td mat-cell *matCellDef="let element">{{ element.posisi_akhir }}</td>
+                        </ng-container>
+
+                        <!-- Header and Footer -->
+                        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
                     </table>
+
+                    <!-- Paginasi -->
+                    <mat-paginator [length]="dataSource.data.length" [pageSize]="5" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
                 </div>
             </div>
         </fuse-card>

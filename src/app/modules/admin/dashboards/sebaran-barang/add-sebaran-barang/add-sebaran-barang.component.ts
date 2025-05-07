@@ -56,7 +56,7 @@ export class AddSebaranBarangComponent implements OnInit {
       // Initialize form controls - hanya field yang diperlukan
       this.inventarisForm = this.fb.group({
         qty_barang: [null, [Validators.required, Validators.min(1), Validators.max(this.barangDetail?.qty_tersedia || 999999)]],
-        posisi_awal: [''],
+        posisi_awal: [this.barangDetail?.nama_gudang || ''],
         posisi_akhir: ['', Validators.required],
         divisi_id: [this.barangDetail?.divisi_id || null, Validators.required],
         user_id: [null, Validators.required]
@@ -95,78 +95,93 @@ export class AddSebaranBarangComponent implements OnInit {
 
     // Handle form submission
     async onSubmit() {
-      if (!this.inventarisForm.valid) {
-        this.showWarningDialog('Mohon isi semua field yang wajib diisi');
-        return;
-      }
+        if (!this.inventarisForm.valid) {
+          this.showWarningDialog('Mohon isi semua field yang wajib diisi');
+          return;
+        }
 
-      // Validasi jumlah barang tidak melebihi yang tersedia
-      if (this.inventarisForm.value.qty_barang > this.barangDetail.qty_tersedia) {
-        this.showWarningDialog(`Jumlah barang tidak boleh melebihi stok tersedia (${this.barangDetail.qty_tersedia})`);
-        return;
-      }
+        // Validasi jumlah barang tidak melebihi yang tersedia
+        const qtyBarang = this.inventarisForm.value.qty_barang;
+        const qtyTersedia = this.barangDetail?.qty_tersedia;
 
-      // Show confirmation dialog before proceeding
-      const confirmation = this._fuseConfirmationService.open({
-        title: 'Tambah Sebaran Barang',
-        message: `Anda yakin ingin menambahkan ${this.inventarisForm.value.qty_barang} ${this.barangDetail.nama_barang} ke distribusi?`,
-        icon: {
-          show: true,
-          name: 'heroicons_outline:question-mark-circle',
-          color: 'info'
-        },
-        actions: {
-          confirm: {
-            label: 'Ya, Tambahkan',
-            color: 'primary'
+        if (qtyBarang > qtyTersedia) {
+          this.showWarningDialog(`Jumlah barang tidak boleh melebihi stok tersedia (${qtyTersedia})`);
+          return;
+        }
+
+        // Get user_id as number
+        const userId = Number(this.inventarisForm.value.user_id);  // Konversi ke angka
+
+        // Show confirmation dialog before proceeding
+        const confirmation = this._fuseConfirmationService.open({
+          title: 'Tambah Sebaran Barang',
+          message: `Anda yakin ingin menambahkan ${qtyBarang} ${this.barangDetail.nama_barang} ke distribusi?`,
+          icon: {
+            show: true,
+            name: 'heroicons_outline:question-mark-circle',
+            color: 'info'
           },
-          cancel: {
-            label: 'Batal'
+          actions: {
+            confirm: {
+              label: 'Ya, Tambahkan',
+              color: 'primary'
+            },
+            cancel: {
+              label: 'Batal'
+            }
           }
-        }
-      });
+        });
 
-      // Subscribe to the confirmation dialog result
-      confirmation.afterClosed().subscribe(async (result) => {
-        if (result === 'confirmed') {
-          this.isLoading = true;
+        // Handle the result of the confirmation dialog
+        confirmation.afterClosed().subscribe(async (result) => {
+          if (result === 'confirmed') {
+            this.isLoading = true;
 
-          try {
-            // Prepare data for the POST request
-            const formData = {
-              id_barang: this.barangDetail.id,
-              id_divisi: this.inventarisForm.value.divisi_id,
-              id_user: this.inventarisForm.value.user_id,
-              qty_barang: this.inventarisForm.value.qty_barang,
-              posisi_awal: this.inventarisForm.value.posisi_awal,
-              posisi_akhir: this.inventarisForm.value.posisi_akhir
-            };
+            try {
+              // Prepare data for the POST request
+              const formData = {
+                id_barang: this.barangDetail.id,
+                id_divisi: this.inventarisForm.value.divisi_id,
+                id_user: userId,  // Kirimkan id_user sebagai number
+                qty_barang: qtyBarang,
+                posisi_awal: this.inventarisForm.value.posisi_awal,
+                posisi_akhir: this.inventarisForm.value.posisi_akhir
+              };
 
-            // Make POST request to add new sebaran barang
-            const response = await this._apiService.post('/sebaran-barang', formData);
-            console.log('Response:', response);
+              // Make POST request to add new sebaran barang
+              const response = await this._apiService.post('/sebaranBarang', formData);
+              console.log('Response:', response);
 
-            // Show success dialog
-            this.showSuccessDialog('Barang berhasil ditambahkan ke distribusi!');
+              // Show success dialog
+              this.showSuccessDialog('Barang berhasil ditambahkan ke distribusi!');
 
-            // Close the dialog and refresh table data
-            this.dialogRef.close('refresh');
-          } catch (error) {
-            console.error('Failed to add barang', error);
-            this.showErrorDialog('Gagal menambahkan barang ke distribusi');
-          } finally {
-            this.isLoading = false;
+              // Close the dialog and refresh table data
+              this.dialogRef.close('refresh');
+            } catch (error) {
+              console.error('Failed to add barang', error);
+              this.showErrorDialog('Gagal menambahkan barang ke distribusi');
+            } finally {
+              this.isLoading = false;
+            }
           }
-        }
-      });
-    }
+        });
+      }
+
 
     // Helper method to prevent invalid characters
     preventInvalidChars(event: any) {
-      const inputValue = event.target.value;
-      // Only allow numbers (0-9)
-      event.target.value = inputValue.replace(/[^0-9]/g, '');
+        const inputValue = event.target.value;
+        const maxQty = this.barangDetail?.qty_tersedia;
+
+        // Batasi input agar tidak lebih dari qty_tersedia
+        if (inputValue > maxQty) {
+            event.target.value = maxQty;
+        }
+
+        // Hanya izinkan angka (0-9)
+        event.target.value = inputValue.replace(/[^0-9]/g, '');
     }
+
 
     // Display nama instead of ID for selection
     getDivisiDisplayFn() {

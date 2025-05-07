@@ -182,40 +182,6 @@ export class TableInventarisComponent implements OnInit{
             });
           }
 
-        // deleteUser(no_hp: string) {
-        //     const confirm = this.fuseConfirmationService.open({
-        //       title: 'Konfirmasi Hapus',
-        //       message: `Apakah Anda yakin ingin menghapus akun ${no_hp}?`,
-        //       actions: {
-        //         confirm: {
-        //           label: 'Delete',
-        //         },
-        //       },
-        //     });
-
-        //     confirm.afterClosed().subscribe((result) => {
-        //       if (result === 'confirmed') {
-        //         this.deleteUserByPhone(no_hp);
-        //       }
-        //     });
-        //   }
-
-        // async deleteUserByPhone(name: string) {
-        //     try {
-        //       this.isLoadingDelete = true
-        //       const deleteData = await this.apiService.delete(`/api/mikrotik/deleteExpiredHotspotUsersByPhone/${name}`, true)
-        //       if (deleteData.message === "Hotspot user deleted successfully") {
-        //         this.toast.error('Delete User Succesfully', 'Delete User')
-        //         this._tableUserService.fetchData()
-        //         this.isLoadingDelete = false
-        //       }
-        //     } catch (error) {
-        //       this.toast.error('Error Delete Users', 'Delete User')
-        //       this.isLoadingDelete = false
-        //       throw error
-        //     }
-        //   }
-
         applyFilter() {
             this.dataSource.filterPredicate = (data: any, filter: string) => {
                 let filters = JSON.parse(filter);
@@ -338,7 +304,92 @@ export class TableInventarisComponent implements OnInit{
             });
           }
 
+          deleteInventaris(inventarisId: number) {
+            // Menanyakan konfirmasi penghapusan
+            const confirm = this.fuseConfirmationService.open({
+                title: 'Konfirmasi',
+                message: 'Apakah Anda yakin ingin menghapus inventaris ini?',
+                icon: {
+                    name: 'heroicons_outline:trash',
+                    color: 'warn'
+                },
+                actions: {
+                    confirm: {
+                        label: 'Hapus',
+                        color: 'warn'
+                    },
+                    cancel: {
+                        label: 'Batal'
+                    }
+                }
+            });
 
+            // Gunakan subscribe untuk menangani hasil dialog
+            confirm.afterClosed().subscribe(async (result) => {
+                // Periksa apakah hasilnya 'confirmed'
+                if (result === 'confirmed') {
+                    try {
+                        // Lakukan penghapusan
+                        const response = await this.apiService.delete(`/inventaris/${inventarisId}`);
+                        console.log('Inventaris berhasil dihapus:', response);
+
+                        // Refresh data setelah penghapusan
+                        this._tableUserService.fetchData();
+                        this.showSuccessDialog('Inventaris berhasil dihapus');
+                    } catch (error) {
+                        console.error('Gagal menghapus inventaris:', error);
+                        this.showErrorDialog('Gagal menghapus inventaris');
+                    }
+                } else {
+                    console.log('Penghapusan dibatalkan');
+                    // Tidak melakukan apa-apa jika dibatalkan
+                }
+            });
+        }
+
+
+        showSuccessDialog(message: string) {
+            this.fuseConfirmationService.open({
+                title: 'Berhasil',
+                message: message,
+                icon: {
+                    name: 'heroicons_outline:check-circle',  // This is an example of success icon
+                    color: 'success'  // Ensure 'color' is correct in this context
+                },
+                actions: {
+                    confirm: {
+                        label: 'OK',
+                        color: 'primary'  // Confirm button color
+                    },
+                    cancel: {
+                        show: false  // No cancel button
+                    }
+                },
+                dismissible: true
+            });
+        }
+
+        // Function for showing error dialog
+        showErrorDialog(message: string) {
+            this.fuseConfirmationService.open({
+                title: 'Gagal',
+                message: message,
+                icon: {
+                    name: 'heroicons_outline:x-circle',  // Error icon
+                    color: 'error'  // Ensure 'color' is correct here as well
+                },
+                actions: {
+                    confirm: {
+                        label: 'OK',
+                        color: 'primary'  // Confirm button color
+                    },
+                    cancel: {
+                        show: false  // No cancel button
+                    }
+                },
+                dismissible: true
+            });
+        }
 
 
 
