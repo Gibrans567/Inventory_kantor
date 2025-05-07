@@ -1,0 +1,130 @@
+
+<div class="h-full w-full overflow-y-hidden">
+    <!-- Breadcrumb -->
+    <nav class="flex shadow px-5 py-3 text-gray-700 borde bg-white dark:bg-slate-800 " aria-label="Breadcrumb">
+    <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+        <li class="inline-flex items-center">
+            <a [routerLink]="['/dashboards/inventaris']"
+                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                Inventaris
+            </a>
+        </li>
+        <li>
+            <div class="flex items-center">
+                <svg class="rtl:rotate-180 block w-3 h-3 mx-1 text-gray-400 " aria-hidden="true"
+                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m1 9 4-4-4-4" />
+                </svg>
+                <a
+                    class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">Detail
+                    Inventaris</a>
+            </div>
+        </li>
+    </ol>
+    </nav>
+
+    <div>
+    <!-- Kartu Pertama -->
+    <div class="mt-8 mx-4">
+        <fuse-card class="shadow-md border-[1px] width-full">
+            <div class="flex flex-row p-6 gap-6 flex-auto">
+                <!-- Kiri: Informasi -->
+                <div class="flex-1">
+                    <h2 class="text-2xl font-semibold mb-6 text-center">Detail Informasi Barang</h2>
+                    <table class="table-auto w-full">
+                        <tr>
+                            <td class="px-4 py-2 font-bold">Tanggal Barang</td>
+                            <td class="px-4 py-2">{{ barangData?.tanggal_pembelian | date:'dd MMMM yyyy, HH:mm':'Asia/Jakarta' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 font-bold">Nama Barang</td>
+                            <td class="px-4 py-2">{{ barangData?.nama_barang }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 font-bold">Nama Divisi</td>
+                            <td class="px-4 py-2">{{ barangData?.kategori_nama }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 font-bold">Harga Pembelian</td>
+                            <td class="px-4 py-2">{{ barangData?.harga_pembelian | currency:'IDR' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 font-bold">Barang Tersedia</td>
+                            <td class="px-4 py-2">{{ barangData?.qty_tersedia }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 font-bold">Barang Terpakai</td>
+                            <td class="px-4 py-2">{{ barangData?.qty_terpakai }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 font-bold">Total  Barang</td>
+                            <td class="px-4 py-2">{{ barangData?.qty_barang }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 font-bold">Total Harga</td>
+                            <td class="px-4 py-2">{{ barangData?.total_nilai | currency:'IDR' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-2 font-bold">Induk gudang</td>
+                            <td class="px-4 py-2">{{ barangData?.nama_gudang}}</td>
+                        </tr>
+                    </table>
+                </div>
+                <!-- Kanan: Gambar -->
+                <div class="flex-1 flex justify-center items-center">
+                    <img
+                        [src]="barangData?.upload_nota"
+                        alt="Nota Pembelian"
+                        class="max-w-full max-h-[400px] object-contain rounded border"
+                    />
+                </div>
+            </div>
+        </fuse-card>
+    </div>
+
+    <!-- Kartu Kedua -->
+    <div class="mt-8 mx-4">
+        <fuse-card class="shadow-md border-[1px] width-full">
+            <div class="p-6 w-full">
+                <h2 class="text-xl font-semibold mb-4">Riwayat Sebaran Barang</h2>
+
+                <!-- Tombol di pojok kanan atas -->
+                <div class="flex justify-end mb-4">
+                    <a [disabled]="isLoading" (click)="TambahSebaranBarang()"  mat-flat-button [color]="'primary'">
+                        <mat-icon class="icon-size-5" [svgIcon]="'person_add_alt_1'"></mat-icon>
+                        <span class="block ml-2">Tambahkan Barang</span>
+                    </a>
+                </div>
+
+                <!-- Tabel Riwayat Barang -->
+                <div class="overflow-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-2">Nama Barang</th>
+                                <th class="px-4 py-2">Nama User</th>
+                                <th class="px-4 py-2">Qty</th>
+                                <th class="px-4 py-2">Posisi Awal</th>
+                                <th class="px-4 py-2">Posisi Akhir</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let item of sebaranBarang">
+                                <td class="px-4 py-2 text-center">{{ item.barang }}</td>
+                                <td class="px-4 py-2 text-center">{{ item.user }}</td>
+                                <td class="px-4 py-2 text-center">{{ item.qty_barang }}</td>
+                                <td class="px-4 py-2 text-center">{{ item.posisi_awal }}</td>
+                                <td class="px-4 py-2 text-center">{{ item.posisi_akhir }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </fuse-card>
+    </div>
+
+
+</div>
+
+</div>

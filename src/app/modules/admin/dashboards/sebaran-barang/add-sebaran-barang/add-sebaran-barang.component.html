@@ -1,0 +1,141 @@
+<!-- add-sebaran-barang.component.html -->
+<div class="flex flex-col p-6 w-full max-h-screen overflow-auto">
+    <!-- Header -->
+    <div class="flex flex-0 items-center justify-between w-full sticky top-0 bg-white z-10 pb-2">
+        <div class="text-2xl font-extrabold tracking-tight">Tambah Distribusi Barang</div>
+        <button mat-icon-button (click)="onNoClick()">
+            <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+        </button>
+    </div>
+
+    <!-- Divider -->
+    <div class="my-4 border-b w-full"></div>
+
+    <!-- Dialog content (scrollable) -->
+    <div class="mt-2 overflow-y-auto flex-1 w-full">
+        <!-- Barang information display -->
+        <div class="bg-gray-100 p-4 mb-6 rounded-lg w-full">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Nama Barang</div>
+                    <div class="text-base font-bold">{{ barangDetail?.nama_barang || 'Tidak ada data' }}</div>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Kategori</div>
+                    <div class="text-base font-bold">{{ barangDetail?.kategori_nama || 'Tidak ada data' }}</div>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Stok Tersedia</div>
+                    <div class="text-base font-bold">{{ barangDetail?.qty_tersedia || 0 }}</div>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Penempatan</div>
+                    <div class="text-base font-bold">{{ barangDetail?.nama_gudang || 'Tidak ada data' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form [formGroup]="inventarisForm" (ngSubmit)="onSubmit()" class="w-full">
+            <div class="flex flex-col space-y-4">
+                <!-- Quantity -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah*</label>
+                    <input
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        type="number"
+                        formControlName="qty_barang"
+                        required
+                        min="1"
+                        [max]="barangDetail?.qty_tersedia"
+                        (input)="preventInvalidChars($event)"
+                    >
+                    <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('qty_barang')?.hasError('required') && inventarisForm.get('qty_barang')?.touched">
+                        Jumlah harus diisi
+                    </div>
+                </div>
+
+                <!-- Posisi Awal -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Posisi Awal</label>
+                    <input
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        formControlName="posisi_awal"
+                        placeholder="Posisi awal barang (opsional)"
+                    >
+                </div>
+
+                <!-- Posisi Akhir -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Posisi Akhir*</label>
+                    <input
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        formControlName="posisi_akhir"
+                        placeholder="Posisi akhir barang"
+                        required
+                    >
+                    <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('posisi_akhir')?.hasError('required') && inventarisForm.get('posisi_akhir')?.touched">
+                        Posisi akhir harus diisi
+                    </div>
+                </div>
+
+                <!-- Divisi -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Divisi*</label>
+                    <select
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                        formControlName="divisi_id"
+                        required
+                    >
+                        <option value="" disabled selected>Pilih divisi</option>
+                        <option *ngFor="let divisi of divisiList" [value]="divisi.id">
+                            {{ divisi.nama_divisi }}
+                        </option>
+                    </select>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('divisi_id')?.hasError('required') && inventarisForm.get('divisi_id')?.touched">
+                        Divisi harus dipilih
+                    </div>
+                </div>
+
+                <!-- User -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pengguna*</label>
+                    <select
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                        formControlName="user_id"
+                        required
+                    >
+                        <option value="" disabled selected>Pilih pengguna</option>
+                        <option *ngFor="let user of userList" [value]="user.id">
+                            {{ user.nama }}
+                        </option>
+                    </select>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('user_id')?.hasError('required') && inventarisForm.get('user_id')?.touched">
+                        Pengguna harus dipilih
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions - Centered at the bottom of the form -->
+            <div class="flex items-center justify-center mt-8 gap-4 pt-4 pb-2 w-full">
+                <button
+                    type="button"
+                    class="px-4 py-2 rounded border border-gray-300"
+                    (click)="onNoClick()"
+                >
+                    Batal
+                </button>
+                <button
+                    type="submit"
+                    class="bg-green-600 text-white px-4 py-2 rounded"
+                    [disabled]="inventarisForm.invalid || isLoading"
+                >
+                    <span *ngIf="!isLoading">Simpan Inventaris</span>
+                    <div *ngIf="isLoading" class="flex items-center justify-center">
+                        <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-white border-r-2"></div>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,16 @@
+<main class="w-full h-fit mb-10 flex flex-col">
+    <nav class="flex shadow px-5 py-3 text-gray-700 borde bg-white dark:bg-slate-800 " aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+            <li class="inline-flex items-center">
+                <a [routerLink]="['/dashboards/inventaris']"
+                    class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                    Inventaris
+                </a>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="w-full px-4">
+        <app-table-inventaris></app-table-inventaris>
+    </div>
+</main>

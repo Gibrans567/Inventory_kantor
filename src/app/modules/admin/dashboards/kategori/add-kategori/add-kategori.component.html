@@ -1,0 +1,26 @@
+<div class="h-full w-full">
+    <div *ngIf="isLoading" class="loading-overlay">
+        <mat-spinner diameter="50" color="primary"></mat-spinner>
+    </div>
+    <a class="w-full" (click)="onNoClick()">
+        <mat-icon svgIcon="mat_solid:close" class="self-end"></mat-icon>
+    </a>
+
+    <div class="overflow-y-auto" style="max-height: 80vh; padding-right: 10px;">
+        <form [formGroup]="categoryForm" class="bg-card mt-2 flex flex-col overflow-hidden rounded-2xl p-8 pb-4">
+
+            <!-- Nama Kategori -->
+            <mat-form-field class="w-full mb-2" floatLabel="always">
+                <mat-label>Nama Kategori</mat-label>
+                <input matInput formControlName="nama_kategori" type="text" placeholder="Masukkan nama kategori" />
+                <mat-error *ngIf="categoryForm.get('nama_kategori')?.hasError('required')">
+                    Nama Kategori wajib diisi
+                </mat-error>
+            </mat-form-field>
+
+            <button class="bg-green-600 text-white p-2 rounded mt-4" (click)="onSubmit()">
+                Simpan Divisi
+            </button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,166 @@
+
+<main class="my-4 mb-10">
+    <fuse-card class="flex flex-col shadow-md border-[1px]" #fuseCard>
+        <div
+            class="truncate text-lg flex-col sm:flex-row font-medium leading-6 tracking-tight px-5 py-3 flex items-start sm:items-center w-full justify-between">
+            <label for="table-search" class="sr-only">Search</label>
+            <div class="relative my-2">
+                <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                    </svg>
+                </div>
+                <input type="text" [disabled]="isLoading" matInput (keyup)="applySearchFilter($event.target.value)"
+                    class="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    placeholder="Cari Barang">
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+
+                <div class="flex items-center gap-2">
+                    <a [disabled]="isLoading" (click)="TambahBarang()"  mat-flat-button [color]="'primary'">
+                        <mat-icon class="icon-size-5" [svgIcon]="'person_add_alt_1'"></mat-icon>
+                        <span class="block ml-2">Tambahkan Barang</span>
+                    </a>
+                </div>
+
+                <!-- Button Filter -->
+                <button [matMenuTriggerFor]="menu" [disabled]="isLoading"
+                    class="flex items-center gap-2 p-2.5 rounded-full px-3 sm:px-5 border-[1px] text-white">
+                    <mat-icon svgIcon="filter_alt"></mat-icon>
+                    <span class="max-sm:hidden text-base font-semibold text-black">Filter</span>
+                    <mat-icon svgIcon="keyboard_arrow_down"></mat-icon>
+                </button>
+
+                <mat-menu #menu="matMenu">
+                    <button mat-menu-item [matMenuTriggerFor]="products"
+                        [matMenuTriggerData]="{disableClose: true}">Divisi</button>
+
+                    <!-- Products Category -->
+
+                    <mat-menu #products="matMenu">
+                        <div class="px-5 py-3">
+                            <h1 class="font-semibold mb-2">Choose Divisi</h1>
+                        </div>
+                        <div class="px-5 py-2 min-w-[200px]">
+                            <div *ngFor="let item of divisiItems" class="flex items-center gap-2">
+                                <mat-checkbox [(ngModel)]="item.checked" (click)="$event.stopPropagation();"
+                                    (change)="applyFilterUserProfile()" class="w-full">
+                                    <span class="truncate block">{{ item.name }}</span>
+                                </mat-checkbox>
+                            </div>
+                        </div>
+                        <div class="px-5 py-3">
+                            <button mat-flat-button color="primary" class="w-full" (click)="addNewDivision()">
+                                <mat-icon class="mr-2">add</mat-icon>
+                                Add Divisi
+                            </button>
+                        </div>
+                        <div class="px-5 py-3">
+                            <!-- Tombol untuk menghapus divisi yang dipilih -->
+                            <button mat-flat-button color="warn" class="w-full" (click)="deleteSelectedDivisi()">
+                                <mat-icon class="mr-2">delete</mat-icon>
+                                Delete Selected Divisi
+                            </button>
+                        </div>
+                    </mat-menu>
+
+
+
+                </mat-menu>
+            </div>
+        </div>
+
+        <!-- Skeleton Loader -->
+        <div role="status" class="p-5 animate-pulse" *ngIf="isLoading">
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full mb-[22px]"></div>
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full mb-[22px]"></div>
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full mb-[22px]"></div>
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full mb-[22px]"></div>
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full mb-[22px]"></div>
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full mb-[22px]"></div>
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full"></div>
+        </div>
+
+        <div *ngIf="isNotDataFound && !isLoading">
+            <div class="flex flex-col items-center">
+                <img src="../../../../../assets/not-found.jpg" alt="not-found.jpg"
+                    class="h-64 bg-cover bg-center object-scale-down">
+                <h1 class="mt-2 font-semibold text-xl -tracking-tighter">Data Not Found</h1>
+            </div>
+        </div>
+
+        <div class="w-full overflow-auto whitespace-nowrap">
+            <mat-table #table [dataSource]="dataSource" matSort *ngIf="!isLoading && !isNotDataFound"
+                class="min-w-180">
+
+                <!-- Name Column -->
+                <ng-container matColumnDef="tanggal_pembelian">
+                    <mat-header-cell *matHeaderCellDef mat-sort-header> Tanggal Masuk Barang </mat-header-cell>
+                    <mat-cell *matCellDef="let element" class="py-2">
+                        <h1 class="text-base font-medium">{{element.tanggal_pembelian | date:'dd MMMM yyyy, HH:mm:ss'}}</h1>
+                    </mat-cell>
+                </ng-container>
+
+                <!-- Profile Column -->
+                <ng-container matColumnDef="nama_barang">
+                    <mat-header-cell *matHeaderCellDef mat-sort-header> Nama Barang </mat-header-cell>
+                    <mat-cell *matCellDef="let element"> {{element.nama_barang}}</mat-cell>
+                </ng-container>
+
+                <!-- Profile Column -->
+                <ng-container matColumnDef="nama_divisi">
+                    <mat-header-cell *matHeaderCellDef mat-sort-header> Nama Divisi </mat-header-cell>
+                    <mat-cell *matCellDef="let element"> {{element.nama_divisi}} </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="harga_pembelian">
+                    <mat-header-cell *matHeaderCellDef mat-sort-header> Harga Pembelian </mat-header-cell>
+                    <mat-cell *matCellDef="let element"> {{element.harga_pembelian | currency:'IDR ':'symbol':'1.0-0' }} </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="qty_barang">
+                    <mat-header-cell *matHeaderCellDef mat-sort-header> Jumlah Barang </mat-header-cell>
+                    <mat-cell *matCellDef="let element"> {{element.qty_barang}} </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="total_nilai">
+                    <mat-header-cell *matHeaderCellDef mat-sort-header> Total Harga </mat-header-cell>
+                    <mat-cell *matCellDef="let element"> {{element.total_nilai | currency:'IDR ':'symbol':'1.0-0' }} </mat-cell>
+                </ng-container>
+
+                <!-- Action Column -->
+                <ng-container matColumnDef="action">
+                    <mat-header-cell *matHeaderCellDef mat-sort-header> Action </mat-header-cell>
+                    <mat-cell *matCellDef="let element" class="px-2 sm:px-6 flex items-center">
+                        <!-- Action Buttons -->
+                        <a (click)="deleteUser(element.name)"
+                            class="font-medium mx-1 text-white dark:text-white bg-red-500 hover:cursor-pointer hover:bg-red-600 rounded hover:underline">
+                            <mat-icon svgIcon="heroicons_solid:trash" class="text-white"
+                                style="transform: scale(0.7);"></mat-icon>
+                        </a>
+                        <a [routerLink]="['edit-user', element.name]"
+                            class="font-medium mx-1 text-white dark:text-white bg-blue-500 hover:bg-blue-600 rounded hover:underline">
+                            <mat-icon svgIcon="heroicons_solid:pencil-square" class="text-white"
+                                style="transform: scale(0.7);"></mat-icon>
+                        </a>
+                        <a [routerLink]="['view-detail', element.id]"
+                            class="font-medium mx-1 text-white dark:text-white bg-slate-500 hover:bg-slate-600 rounded hover:underline">
+                            <mat-icon svgIcon="heroicons_solid:eye" class="text-white"
+                                style="transform: scale(0.7);"></mat-icon>
+                        </a>
+                    </mat-cell>
+                </ng-container>
+
+                <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+            </mat-table>
+        </div>
+
+        <mat-paginator #paginator [pageSize]="10" [length]="dataSource.data.length" [pageSizeOptions]="[5, 10, 20]"
+            [showFirstLastButtons]="true">
+        </mat-paginator>
+    </fuse-card>
+</main>

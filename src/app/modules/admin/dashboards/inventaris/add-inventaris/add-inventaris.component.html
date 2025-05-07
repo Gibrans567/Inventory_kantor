@@ -1,0 +1,112 @@
+<div class="h-full w-full ">
+    <div *ngIf="isLoading" class="loading-overlay">
+        <mat-spinner diameter="50" color="primary"></mat-spinner>
+      </div>
+    <a class="w-full" (click)="onNoClick()">
+        <mat-icon svgIcon="mat_solid:close" class="self-end"></mat-icon>
+    </a>
+
+    <div class="overflow-y-auto" style="max-height: 80vh; padding-right: 10px;">
+        <form [formGroup]="inventarisForm" class="bg-card mt-2 flex flex-col overflow-hidden rounded-2xl p-8 pb-4">
+
+            <!-- Nama Barang -->
+            <mat-form-field class="w-full mb-2" floatLabel="always">
+                <mat-label>Nama Barang</mat-label>
+                <input matInput formControlName="nama_barang" type="text" placeholder="Masukkan nama barang" />
+                <mat-error *ngIf="inventarisForm.get('nama_barang')?.hasError('required')">
+                    Nama barang wajib diisi
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Jumlah Barang -->
+            <mat-form-field class="w-full mb-2">
+                <mat-label >Jumlah Barang</mat-label>
+                <input matInput type="number" formControlName="qty_barang" placeholder="Jumlah Barang" min="1"
+                    (input)="preventInvalidChars($event)" />
+                <mat-error *ngIf="inventarisForm.get('qty_barang')?.hasError('required')">
+                    Jumlah wajib diisi
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Harga Pembelian -->
+            <mat-form-field class="w-full mb-2">
+                <mat-label>Harga Pembelian</mat-label>
+                <input matInput formControlName="harga_pembelian" placeholder="Harga dalam Rupiah"
+                    (input)="formatCurrency($event)" />
+                <span matPrefix>Rp&nbsp;</span>
+                <mat-error *ngIf="inventarisForm.get('harga_pembelian')?.hasError('required')">
+                    Harga wajib diisi
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Spesifikasi -->
+            <mat-form-field class="w-full mb-2">
+                <mat-label>Spesifikasi</mat-label>
+                <textarea matInput formControlName="spesifikasi" rows="2" placeholder="Deskripsi spesifikasi barang"></textarea>
+                <mat-error *ngIf="inventarisForm.get('spesifikasi')?.hasError('required')">
+                    Spesifikasi wajib diisi
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Tanggal Pembelian -->
+            <mat-form-field class="w-full mb-2">
+                <mat-label>Tanggal Pembelian</mat-label>
+                <input matInput [matDatepicker]="picker" formControlName="tanggal_pembelian" placeholder="Pilih tanggal">
+                <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+                <mat-error *ngIf="inventarisForm.get('tanggal_pembelian')?.hasError('required')">
+                    Tanggal wajib diisi
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Gudang -->
+            <mat-form-field class="w-full mb-2">
+                <mat-label>Pilih Gudang</mat-label>
+                <select matNativeControl formControlName="gudang_id">
+                    <option value="" disabled selected>-- Pilih Gudang --</option>
+                    <option *ngFor="let item of gudangList" [value]="item.id">
+                        {{ item.nama_gudang }}
+                    </option>
+                </select>
+            </mat-form-field>
+
+            <!-- Kategori -->
+            <mat-form-field class="w-full mb-2">
+                <mat-label>Pilih Kategori</mat-label>
+                <select matNativeControl formControlName="kategori_id">
+
+                    <option value="" disabled selected>-- Pilih Kategori --</option>
+                    <option *ngFor="let item of kategoriList" [value]="item.id">
+                        {{ item.nama_kategori }}
+                    </option>
+                </select>
+            </mat-form-field>
+
+            <!-- Divisi -->
+            <mat-form-field class="w-full mb-2">
+                <mat-label>Pilih Divisi</mat-label>
+                <select matNativeControl formControlName="divisi_id">
+                    <option value=""  disabled selected>-- Pilih Divisi --</option>
+                    <option *ngFor="let item of divisiList" [value]="item.id">
+                        {{ item.nama_divisi }}
+                    </option>
+                </select>
+            </mat-form-field>
+
+            <!-- User -->
+            <mat-form-field class="w-full mb-2">
+                <mat-label >Pilih User</mat-label>
+                <select matNativeControl formControlName="user_id" >
+                    <option value=""  disabled selected>-- Pilih user --</option>
+                    <option *ngFor="let item of userList" [value]="item.id" >
+                        {{ item.nama_user }}
+                    </option>
+                </select>
+            </mat-form-field>
+
+            <button class="bg-green-600 text-white p-2 rounded mt-4" (click)="onSubmit()">
+                Simpan Inventaris
+            </button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,80 @@
+<main class="my-8 mb-10 w-full mx-8">
+    <fuse-card class="flex flex-col shadow-md border-[1px]" #fuseCard>
+        <div class="truncate text-lg flex-col sm:flex-row font-medium leading-6 tracking-tight px-5 py-3 flex items-start sm:items-center w-full justify-between">
+            <label for="table-search" class="sr-only">Search</label>
+            <div class="relative my-2">
+                <div class="absolute inset-y-0 rtl:inset-r-0 start-0 flex items-center ps-3 pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+                    </svg>
+                </div>
+                <input type="text" [disabled]="isLoading" matInput (keyup)="applySearchFilter($event.target.value)" class="block p-2 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Cari Kategori">
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <!-- Button Tambah Kategori -->
+                <div class="flex items-center gap-2">
+                    <a [disabled]="isLoading" (click)="addNewCategory()" mat-flat-button [color]="'primary'">
+                        <mat-icon class="icon-size-5" [svgIcon]="'person_add_alt_1'"></mat-icon>
+                        <span class="block ml-2">Tambahkan Kategori</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skeleton Loader -->
+        <div role="status" class="p-5 animate-pulse" *ngIf="isLoading">
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full mb-[22px]"></div>
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full mb-[22px]"></div>
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full mb-[22px]"></div>
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full mb-[22px]"></div>
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full mb-[22px]"></div>
+            <div class="h-6 bg-gray-300 rounded-full dark:bg-gray-700 w-full"></div>
+        </div>
+
+        <div *ngIf="isNotDataFound && !isLoading">
+            <div class="flex flex-col items-center">
+                <img src="../../../../../assets/not-found.jpg" alt="not-found.jpg" class="h-64 bg-cover bg-center object-scale-down">
+                <h1 class="mt-2 font-semibold text-xl -tracking-tighter">Data Not Found</h1>
+            </div>
+        </div>
+
+        <div class="w-full overflow-auto whitespace-nowrap">
+            <mat-table #table [dataSource]="dataSource" matSort *ngIf="!isLoading && !isNotDataFound" class="min-w-180">
+
+                <!-- Kategori Name Column -->
+                <ng-container matColumnDef="nama_kategori">
+                    <mat-header-cell *matHeaderCellDef mat-sort-header> Nama Kategori </mat-header-cell>
+                    <mat-cell *matCellDef="let element" class="py-2">
+                        <h1 class="text-base font-medium">{{element.nama_kategori}}</h1>
+                    </mat-cell>
+                </ng-container>
+
+                <!-- Action Column -->
+                <ng-container matColumnDef="action">
+                    <mat-header-cell *matHeaderCellDef mat-sort-header> Action </mat-header-cell>
+                    <mat-cell *matCellDef="let element" class="px-2 sm:px-6 flex items-center">
+                        <!-- Action Buttons -->
+                        <a (click)="deleteCategoryByName(element.nama_kategori)"
+                            class="font-medium mx-1 text-white dark:text-white bg-red-500 hover:cursor-pointer hover:bg-red-600 rounded hover:underline">
+                            <mat-icon svgIcon="heroicons_solid:trash" class="text-white"
+                                style="transform: scale(0.7);"></mat-icon>
+                        </a>
+                        <a [routerLink]="['edit-kategori', element.id]"
+                            class="font-medium mx-1 text-white dark:text-white bg-blue-500 hover:bg-blue-600 rounded hover:underline">
+                            <mat-icon svgIcon="heroicons_solid:pencil-square" class="text-white"
+                                style="transform: scale(0.7);"></mat-icon>
+                        </a>
+                    </mat-cell>
+                </ng-container>
+
+                <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+            </mat-table>
+        </div>
+
+        <mat-paginator #paginator [pageSize]="10" [length]="dataSource.data.length" [pageSizeOptions]="[5, 10, 20]"
+            [showFirstLastButtons]="true" (page)="onPageChange($event)">
+        </mat-paginator>
+    </fuse-card>
+</main>
