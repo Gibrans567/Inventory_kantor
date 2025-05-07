@@ -74,14 +74,18 @@ func UpdateDivisi(c *gin.Context) {
 
 // DeleteDivisi - Menghapus Divisi berdasarkan ID
 func DeleteDivisi(c *gin.Context) {
-	id := c.Param("id")
-	db := database.GetDB()
+    NamaDivisi := c.Param("nama_divisi")
+    db := database.GetDB()
 
-	result := db.Delete(&types.Divisi{}, id)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
-		return
-	}
+    // Use a condition to find the record and delete it
+    result := db.Where("nama_divisi = ?", NamaDivisi).Delete(&types.Divisi{})
+    if result.Error != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+        return
+    }
 
-	c.JSON(http.StatusNoContent, gin.H{"message": "Deleted successfully"})
+    // Respond with a more explicit success message
+    c.JSON(http.StatusOK, gin.H{"message": "Divisi deleted successfully"})
 }
+
+

@@ -238,9 +238,9 @@ func GetAllInventaris(c *gin.Context) {
             "upload_nota":        item.UploadNota,
             "created_at":         item.CreatedAt,
             "updated_at":         item.UpdatedAt,
-            "gudang_nama":        item.Gudang.NamaGudang,     // Nama Gudang
+            "nama_gudang":        item.Gudang.NamaGudang,     // Nama Gudang
             "kategori_nama":      item.Kategori.NamaKategori, // Nama Kategori
-            "divisi_nama":        item.Divisi.NamaDivisi,     // Nama Divisi
+            "nama_divisi":        item.Divisi.NamaDivisi,     // Nama Divisi
         })
     }
 
@@ -294,11 +294,11 @@ func GetInventarisById(c *gin.Context) {
         "id":                 inventaris.ID,
         "tanggal_pembelian":  tanggalPembelian,
         "gudang_id":          inventaris.GudangID,
-        "gudang_nama":        inventaris.Gudang.NamaGudang,     // Nama Gudang
+        "nama_gudang":        inventaris.Gudang.NamaGudang,     // Nama Gudang
         "kategori_id":        inventaris.KategoriID,
         "kategori_nama":      inventaris.Kategori.NamaKategori, // Nama Kategori
         "divisi_id":          inventaris.DivisiID,              // ID Divisi
-        "divisi_nama":        inventaris.Divisi.NamaDivisi,     // Nama Divisi
+        "nama_divisi":        inventaris.Divisi.NamaDivisi,     // Nama Divisi
         "nama_barang":        inventaris.NamaBarang,
         "qty_barang":         inventaris.QtyBarang,
         "qty_terpakai":       inventaris.QtyTerpakai,
@@ -369,11 +369,11 @@ func GetInventarisByDate(c *gin.Context) {
 			"id":                 inv.ID,
 			"tanggal_pembelian": inv.TanggalPembelian.Format(time.RFC3339),
 			"gudang_id":          inv.GudangID,
-			"gudang_nama":        inv.Gudang.NamaGudang,
+			"nama_gudang":        inv.Gudang.NamaGudang,
 			"kategori_id":        inv.KategoriID,
 			"kategori_nama":      inv.Kategori.NamaKategori,
 			"divisi_id":          inv.DivisiID,              // Menambahkan divisi_id
-			"divisi_nama":        inv.Divisi.NamaDivisi,     // Menambahkan divisi_nama
+			"nama_divisi":        inv.Divisi.NamaDivisi,     // Menambahkan nama_divisi
 			"nama_barang":        inv.NamaBarang,
 			"qty_barang":         inv.QtyBarang,
 			"qty_terpakai":       inv.QtyTerpakai,
@@ -422,9 +422,9 @@ func GetInventarisByCategory(c *gin.Context) {
 			"id":                inv.ID,
 			"tanggal_pembelian": inv.TanggalPembelian.Format(time.RFC3339),
 			"gudang_id":         inv.GudangID,
-			"gudang_nama":       inv.Gudang.NamaGudang,
+			"nama_gudang":       inv.Gudang.NamaGudang,
 			"divisi_id":         inv.DivisiID,        // Menambahkan divisi_id
-			"divisi_nama":       inv.Divisi.NamaDivisi, // Menambahkan divisi_nama
+			"nama_divisi":       inv.Divisi.NamaDivisi, // Menambahkan nama_divisi
 			"nama_barang":       inv.NamaBarang,
 			"qty_barang":        inv.QtyBarang,
 			"qty_terpakai":      inv.QtyTerpakai,
@@ -651,7 +651,7 @@ func GetInventarisByDivisiName(c *gin.Context) {
 
 	result := gin.H{
 		"divisi_id":   divisi.ID,
-		"divisi_nama": divisi.NamaDivisi,
+		"nama_divisi": divisi.NamaDivisi,
 		"items":       []gin.H{},
 	}
 
@@ -675,7 +675,7 @@ func GetInventarisByDivisiName(c *gin.Context) {
 			"id":                inv.ID,
 			"tanggal_pembelian": inv.TanggalPembelian.Format(time.RFC3339),
 			"gudang_id":         inv.GudangID,
-			"gudang_nama":       inv.Gudang.NamaGudang,
+			"nama_gudang":       inv.Gudang.NamaGudang,
 			"kategori_id":       inv.KategoriID,
 			"kategori_nama":     inv.Kategori.NamaKategori,
 			"nama_barang":       inv.NamaBarang,
@@ -747,11 +747,11 @@ func GetInventarisByNama(c *gin.Context) {
         "id":                 inventaris.ID,
         "tanggal_pembelian":  tanggalPembelian,
         "gudang_id":          inventaris.GudangID,
-        "gudang_nama":        inventaris.Gudang.NamaGudang,     // Nama Gudang
+        "nama_gudang":        inventaris.Gudang.NamaGudang,     // Nama Gudang
         "kategori_id":        inventaris.KategoriID,
         "kategori_nama":      inventaris.Kategori.NamaKategori, // Nama Kategori
         "divisi_id":          inventaris.DivisiID,              // ID Divisi
-        "divisi_nama":        inventaris.Divisi.NamaDivisi,     // Nama Divisi
+        "nama_divisi":        inventaris.Divisi.NamaDivisi,     // Nama Divisi
         "nama_barang":        inventaris.NamaBarang,
         "qty_barang":         inventaris.QtyBarang,
         "qty_terpakai":       inventaris.QtyTerpakai,

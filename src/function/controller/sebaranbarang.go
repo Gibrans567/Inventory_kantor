@@ -125,16 +125,59 @@ func CreateSebaranBarang(c *gin.Context) {
 // GetSebaranBarangByID - Mendapatkan SebaranBarang berdasarkan ID
 func GetSebaranBarangByID(c *gin.Context) {
 	id := c.Param("id")
-
-	var sebaranBarang types.SebaranBarang
 	db := database.GetDB()
-	result := db.First(&sebaranBarang, id)
-	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "SebaranBarang not found"})
+
+	var sebaranBarangs []types.SebaranBarang
+
+	// Ambil semua sebaran barang berdasarkan id_barang dan preload relasi
+	err := db.
+		Preload("Divisi").
+		Preload("Inventaris").
+		Preload("User").
+		Where("id_barang = ?", id).
+		Find(&sebaranBarangs).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, sebaranBarang)
+	if len(sebaranBarangs) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No SebaranBarang found with that id_barang"})
+		return
+	}
+
+	// Struct untuk response
+	type Response struct {
+		ID           uint   `json:"id"`
+		NamaDivisi   string `json:"nama_divisi"`
+		NamaBarang   string `json:"nama_barang"`
+		NamaUser     string `json:"nama"`
+		QtyBarang    int    `json:"qty_barang"`
+		PosisiAwal   string `json:"posisi_awal"`
+		PosisiAkhir  string `json:"posisi_akhir"`
+		Status       string `json:"status"`
+		CreatedAt    time.Time `json:"created_at"`
+	}
+
+	// Mapping hasil ke response
+	var responseData []Response
+	for _, sb := range sebaranBarangs {
+		res := Response{
+			ID:           sb.ID,
+			NamaDivisi:   sb.Divisi.NamaDivisi,
+			NamaBarang:   sb.Inventaris.NamaBarang,
+			NamaUser:     sb.User.Name,
+			QtyBarang:    sb.QtyBarang,
+			PosisiAwal:   sb.PosisiAwal,
+			PosisiAkhir:  sb.PosisiAkhir,
+			Status:       sb.Status,
+			CreatedAt:    sb.CreatedAt,
+		}
+		responseData = append(responseData, res)
+	}
+
+	c.JSON(http.StatusOK, responseData)
 }
 
 // GetAllSebaranBarang - Mendapatkan semua SebaranBarang dengan hanya menampilkan nama terkait

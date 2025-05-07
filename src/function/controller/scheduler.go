@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
     "log"
+	"strings"
 
 
 
@@ -351,7 +352,7 @@ func UploadGambar(c *gin.Context) {
 
 	// Cek jika folder belum ada, buat foldernya
 	if _, err := os.Stat(storageDir); os.IsNotExist(err) {
-		err := os.MkdirAll(storageDir, os.ModePerm) // Menggunakan os.MkdirAll untuk membuat folder secara rekursif
+		err := os.MkdirAll(storageDir, os.ModePerm)
 		if err != nil {
 			log.Printf("Failed to create storage directory: %v", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create storage directory"})
@@ -361,9 +362,8 @@ func UploadGambar(c *gin.Context) {
 	}
 
 	// Membuat nama file berdasarkan nama_barang dan tanggal_pembelian
-	// Format nama file: nama_barang_tanggal_pembelian.ext
 	ext := filepath.Ext(file.Filename)
-	tanggalPembelian := inv.TanggalPembelian.Format("2006-01-02") // Format tanggal sesuai kebutuhan
+	tanggalPembelian := inv.TanggalPembelian.Format("2006-01-02")
 	newFileName := fmt.Sprintf("%s_%s%s", inv.NamaBarang, tanggalPembelian, ext)
 	log.Printf("Generated new file name: %s", newFileName)
 
@@ -376,10 +376,11 @@ func UploadGambar(c *gin.Context) {
 	}
 	log.Printf("File saved to: %s", filePath)
 
-	// Menyimpan path file di database
-	uploadNotaPath := filepath.ToSlash(filePath) // Path relative dari storage
+	// Membuat path yang bisa diakses melalui URL
+	relativePath := strings.TrimPrefix(filepath.ToSlash(filePath), "./") // Menghilangkan './'
+	uploadNotaPath := fmt.Sprintf("http://localhost:8080/%s", relativePath)
 
-	// Update record Inventaris dengan path file yang baru
+	// Update record Inventaris dengan path file
 	inv.UploadNota = uploadNotaPath
 	if err := db.Save(&inv).Error; err != nil {
 		log.Printf("Failed to update database: %v", err)
@@ -388,7 +389,7 @@ func UploadGambar(c *gin.Context) {
 	}
 	log.Println("Database updated with new file path")
 
-	// Menampilkan hasil yang berhasil
+	// Menampilkan hasil
 	c.JSON(http.StatusOK, gin.H{
 		"message": "File uploaded successfully",
 		"file":    uploadNotaPath,

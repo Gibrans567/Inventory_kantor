@@ -74,14 +74,19 @@ func UpdateKategori(c *gin.Context) {
 
 // DeleteKategori - Menghapus Kategori berdasarkan ID
 func DeleteKategori(c *gin.Context) {
-	id := c.Param("id")
-	db := database.GetDB()
+    // Mendapatkan nama kategori dari parameter URL
+    NamaKategori := c.Param("nama_kategori")
+    db := database.GetDB()
 
-	result := db.Delete(&types.Kategori{}, id)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
-		return
-	}
+    // Mencari dan menghapus kategori berdasarkan nama
+    result := db.Where("nama_kategori = ?", NamaKategori).Delete(&types.Kategori{})
+    
+    if result.Error != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+        return
+    }
 
-	c.JSON(http.StatusNoContent, gin.H{"message": "Deleted successfully"})
+    // Mengirimkan respon sukses
+    c.JSON(http.StatusOK, gin.H{"message": "Kategori deleted successfully"})
 }
+

@@ -23,7 +23,7 @@ func SetupRouter(r *gin.Engine){
 		divisi.POST("", controller.CreateDivisi)
 		divisi.GET("", controller.GetAllDivisi)
 		divisi.PUT("/:id", controller.UpdateDivisi)
-		divisi.DELETE("/:id", controller.DeleteDivisi)
+		divisi.DELETE("/:nama_divisi", controller.DeleteDivisi)
 	}
 
 	// Gudang Routes
@@ -41,7 +41,7 @@ func SetupRouter(r *gin.Engine){
 		inventaris.POST("", controller.CreateInventaris)
 		inventaris.GET("", controller.GetAllInventaris)
 		inventaris.GET("/:nama_divisi", controller.GetInventarisByDivisiName)
-		inventaris.GET("barang/:nama_divisi", controller.GetInventarisByDivisiName)
+		inventaris.GET("/barang/:id", controller.GetInventarisById)
 		inventaris.PUT("/:id", controller.UpdateInventaris)
 		inventaris.DELETE("/:id", controller.DeleteInventaris)
 	}
@@ -52,7 +52,7 @@ func SetupRouter(r *gin.Engine){
 		kategori.POST("", controller.CreateKategori)
 		kategori.GET("", controller.GetAllKategori)
 		kategori.PUT("/:id", controller.UpdateKategori)
-		kategori.DELETE("/:id", controller.DeleteKategori)
+		kategori.DELETE("/:nama_kategori", controller.DeleteKategori)
 	}
 
 	// SebaranBarang Routes
@@ -60,6 +60,7 @@ func SetupRouter(r *gin.Engine){
 	{
 		sebaranBarang.POST("", controller.CreateSebaranBarang)
 		sebaranBarang.GET("", controller.GetAllSebaranBarang)
+		sebaranBarang.GET("/:id", controller.GetSebaranBarangByID)
 		sebaranBarang.PUT("/:id", controller.UpdateSebaranBarang)
 		sebaranBarang.DELETE("/:id", controller.DeleteSebaranBarang)
 	}

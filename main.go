@@ -22,8 +22,11 @@ func main() {
 	
 
 	// Inisialisasi router
+	
+
 	r := gin.Default()
 
+	r.Static("/storage", "./storage")
 	// Pasang middleware CORS
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:4200"},

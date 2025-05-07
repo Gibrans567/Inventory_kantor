@@ -97,6 +97,7 @@ type SebaranBarang struct {
     QtyBarang         int       `json:"qty_barang"`
     PosisiAwal        string    `json:"posisi_awal"`
     PosisiAkhir       string    `json:"posisi_akhir"`
+    Status            string    `json:"status"`
     CreatedAt         time.Time
     UpdatedAt         time.Time
     Divisi            Divisi     `gorm:"foreignKey:IdDivisi" json:"-"`  // Many to One
