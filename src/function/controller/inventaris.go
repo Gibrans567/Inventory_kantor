@@ -22,7 +22,7 @@ func CreateInventaris(c *gin.Context) {
         return
     }
     
-    // Validation code remains the same...
+    // Validation for Gudang, Kategori, Divisi, User (same as before)
     var gudang types.Gudang
     if err := db.Where("id = ?", inventarisInput.GudangID).First(&gudang).Error; err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "GudangID tidak valid"})
@@ -51,25 +51,21 @@ func CreateInventaris(c *gin.Context) {
 
     tx := db.Begin()
 
-    // Check if barang with same name already exists
+    var inventaris types.Inventaris
+
+    // Check if item already exists
     var existingInventaris types.Inventaris
     err := tx.Where("nama_barang = ? AND kategori_id = ? AND gudang_id = ?", 
                     inventarisInput.NamaBarang, 
                     inventarisInput.KategoriID, 
                     inventarisInput.GudangID).First(&existingInventaris).Error
 
-    var inventaris types.Inventaris
-    var isNewItem bool
-
     if err == nil {
         // Barang already exists, update the existing one
-        isNewItem = false
         
-        // Update quantity and total values
+        // Update the existing item with new quantity and value
         newQtyBarang := existingInventaris.QtyBarang + inventarisInput.QtyBarang
         newTotalNilai := existingInventaris.TotalNilai + (inventarisInput.HargaPembelian * inventarisInput.QtyBarang)
-        
-        // Calculate new average price
         newHargaPembelian := newTotalNilai / newQtyBarang
         
         updates := map[string]interface{}{
@@ -85,30 +81,28 @@ func CreateInventaris(c *gin.Context) {
             c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal update inventaris: " + err.Error()})
             return
         }
-        
-        // Refresh inventaris from database
+
         if err := tx.Where("id = ?", existingInventaris.ID).First(&inventaris).Error; err != nil {
             tx.Rollback()
             c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mendapatkan data inventaris: " + err.Error()})
             return
         }
-        
+
     } else if err == gorm.ErrRecordNotFound {
         // Barang doesn't exist, create new one
-        isNewItem = true
         inventaris = inventarisInput
         inventaris.QtyTerpakai = 0
         inventaris.TotalNilai = inventarisInput.HargaPembelian * inventarisInput.QtyBarang
         inventaris.QtyTersedia = inventarisInput.QtyBarang
-		inventaris.Role = user.Role
+        inventaris.Role = user.Role
 
         if err := tx.Create(&inventaris).Error; err != nil {
             tx.Rollback()
             c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
             return
         }
-        
-        // Create depresiasi for new item
+
+        // Create depresiasi and jadwal for new item (optional)
         hargaDepresiasi := int(float64(inventaris.HargaPembelian) * 0.025)
         depresiasi := types.Depresiasi{
             IdGudang:        inventaris.GudangID,
@@ -123,8 +117,7 @@ func CreateInventaris(c *gin.Context) {
             c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan depresiasi: " + err.Error()})
             return
         }
-        
-        // Create jadwal depresiasi for new item
+
         nextRun := time.Now().AddDate(0, 1, 0)
         jadwal := types.JadwalDepresiasi{
             IdBarang: inventaris.ID,
@@ -142,68 +135,21 @@ func CreateInventaris(c *gin.Context) {
         return
     }
 
-    // Create history for both new and existing items
-    now := time.Now()
-    var keterangan string
-    if isNewItem {
-        keterangan = fmt.Sprintf("Pada %s barang %s telah masuk ke gudang %s oleh %s dari Divisi %s", 
-                                now.Format("02-01-2006 15:04:05"), 
-                                inventaris.NamaBarang, 
-                                gudang.NamaGudang, 
-                                user.Name, 
-                                divisi.NamaDivisi)
-    } else {
-        keterangan = fmt.Sprintf("Pada %s jumlah barang %s bertambah sebanyak %d di gudang %s oleh %s dari Divisi %s", 
-                                now.Format("02-01-2006 15:04:05"), 
-                                inventaris.NamaBarang, 
-                                inventarisInput.QtyBarang,
-                                gudang.NamaGudang, 
-                                user.Name, 
-                                divisi.NamaDivisi)
-    }
-    
-    history := types.History{
-        Kategori:   "Barang Masuk",
-        Keterangan: keterangan,
-        CreatedAt:  now,
-    }
-
-    if err := tx.Create(&history).Error; err != nil {
-        tx.Rollback()
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal simpan history: " + err.Error()})
-        return
-    }
-
     // Commit transaction
     if err := tx.Commit().Error; err != nil {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal commit: " + err.Error()})
         return
     }
 
-    // Prepare response data
+    // Prepare response data with only inventaris and message
     responseData := gin.H{
+        "status":  "success",
+        "message": "Inventaris berhasil ditambahkan",
         "inventaris": inventaris,
-        "history":    history,
-        "is_new_item": isNewItem,
-		"message" : "Inventaris berhasil ditambahkan",
-    }
-    
-    // Only include depresiasi and jadwal info for new items
-    if isNewItem {
-        var depresiasi types.Depresiasi
-        if err := db.Where("id_barang = ?", inventaris.ID).First(&depresiasi).Error; err == nil {
-            responseData["depresiasi"] = depresiasi
-        }
-        
-        var jadwal types.JadwalDepresiasi
-        if err := db.Where("id_barang = ?", inventaris.ID).First(&jadwal).Error; err == nil {
-            responseData["jadwal"] = jadwal
-        }
     }
 
     c.JSON(http.StatusCreated, responseData)
 }
-
 
 // GetAllInventaris - Mendapatkan semua data Inventaris
 func GetAllInventaris(c *gin.Context) {

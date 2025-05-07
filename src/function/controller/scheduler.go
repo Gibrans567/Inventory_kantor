@@ -323,75 +323,102 @@ func DeleteAllByTimeframe(c *gin.Context) {
 }
 
 func UploadGambar(c *gin.Context) {
-	// Mendapatkan ID dari query parameter
-	id := c.DefaultQuery("id", "0")
-	log.Printf("Search for Inventaris with ID: %s", id)
+    // Mendapatkan ID dari query parameter
+    id := c.DefaultQuery("id", "0")
+    log.Printf("Search for Inventaris with ID: %s", id)
 
-	// Mengambil data Inventaris berdasarkan ID
-	inv := types.Inventaris{}
-	db := database.GetDB() // Menggunakan GetDB untuk mendapatkan koneksi
-	if err := db.First(&inv, id).Error; err != nil {
-		log.Printf("Inventaris with ID %s not found: %v", id, err)
-		c.JSON(http.StatusNotFound, gin.H{"error": "Inventaris not found"})
-		return
-	}
-	log.Printf("Inventaris found: ID %s", id)
+    // Mengambil data Inventaris berdasarkan ID
+    inv := types.Inventaris{}
+    db := database.GetDB() // Menggunakan GetDB untuk mendapatkan koneksi
+    if err := db.First(&inv, id).Error; err != nil {
+        log.Printf("Inventaris with ID %s not found: %v", id, err)
+        c.JSON(http.StatusNotFound, gin.H{"error": "Inventaris not found"})
+        return
+    }
+    log.Printf("Inventaris found: ID %s", id)
 
-	// Mendapatkan file gambar dari request
-	file, _ := c.FormFile("upload_nota")
-	if file == nil {
-		log.Println("No file uploaded")
-		c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
-		return
-	}
-	log.Printf("File uploaded: %s", file.Filename)
+    // Mendapatkan file gambar dari request
+    file, _ := c.FormFile("upload_nota")
+    if file == nil {
+        log.Println("No file uploaded")
+        c.JSON(http.StatusBadRequest, gin.H{"error": "No file uploaded"})
+        return
+    }
+    log.Printf("File uploaded: %s", file.Filename)
 
-	// Membuat folder penyimpanan dengan format: storage/tahun/bulan/hari
-	currentDate := time.Now()
-	storageDir := fmt.Sprintf("./storage/%d/%02d/%02d", currentDate.Year(), currentDate.Month(), currentDate.Day())
+    // Validasi ekstensi file untuk memastikan hanya gambar yang diupload
+    validExtensions := []string{".jpg", ".jpeg", ".png", ".gif", ".bmp"}
+    ext := strings.ToLower(filepath.Ext(file.Filename))
 
-	// Cek jika folder belum ada, buat foldernya
-	if _, err := os.Stat(storageDir); os.IsNotExist(err) {
-		err := os.MkdirAll(storageDir, os.ModePerm)
-		if err != nil {
-			log.Printf("Failed to create storage directory: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create storage directory"})
-			return
-		}
-		log.Println("Storage directory created successfully")
-	}
+    // Cek apakah ekstensi file valid
+    valid := false
+    for _, e := range validExtensions {
+        if ext == e {
+            valid = true
+            break
+        }
+    }
 
-	// Membuat nama file berdasarkan nama_barang dan tanggal_pembelian
-	ext := filepath.Ext(file.Filename)
-	tanggalPembelian := inv.TanggalPembelian.Format("2006-01-02")
-	newFileName := fmt.Sprintf("%s_%s%s", inv.NamaBarang, tanggalPembelian, ext)
-	log.Printf("Generated new file name: %s", newFileName)
+    if !valid {
+        log.Println("Invalid file type. Only image files are allowed")
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type. Only image files are allowed"})
+        return
+    }
 
-	// Menyimpan file ke folder storage
-	filePath := filepath.Join(storageDir, newFileName)
-	if err := c.SaveUploadedFile(file, filePath); err != nil {
-		log.Printf("Failed to save file: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
-		return
-	}
-	log.Printf("File saved to: %s", filePath)
+    // Menambahkan pembatasan ukuran file (maksimal 5MB)
+    const MaxFileSize = 5 * 1024 * 1024 // 5 MB
+    if file.Size > MaxFileSize {
+        log.Println("File size exceeds the limit")
+        c.JSON(http.StatusBadRequest, gin.H{"error": "File size exceeds the 5MB limit"})
+        return
+    }
 
-	// Membuat path yang bisa diakses melalui URL
-	relativePath := strings.TrimPrefix(filepath.ToSlash(filePath), "./") // Menghilangkan './'
-	uploadNotaPath := fmt.Sprintf("http://localhost:8080/%s", relativePath)
+    // Membuat folder penyimpanan dengan format: storage/tahun/bulan/hari
+    currentDate := time.Now()
+    storageDir := fmt.Sprintf("./storage/%d/%02d/%02d", currentDate.Year(), currentDate.Month(), currentDate.Day())
 
-	// Update record Inventaris dengan path file
-	inv.UploadNota = uploadNotaPath
-	if err := db.Save(&inv).Error; err != nil {
-		log.Printf("Failed to update database: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update database"})
-		return
-	}
-	log.Println("Database updated with new file path")
+    // Cek jika folder belum ada, buat foldernya
+    if _, err := os.Stat(storageDir); os.IsNotExist(err) {
+        err := os.MkdirAll(storageDir, os.ModePerm)
+        if err != nil {
+            log.Printf("Failed to create storage directory: %v", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create storage directory"})
+            return
+        }
+        log.Println("Storage directory created successfully")
+    }
 
-	// Menampilkan hasil
-	c.JSON(http.StatusOK, gin.H{
-		"message": "File uploaded successfully",
-		"file":    uploadNotaPath,
-	})
+    // Membuat nama file berdasarkan nama_barang dan tanggal_pembelian
+    tanggalPembelian := inv.TanggalPembelian.Format("2006-01-02")
+    newFileName := fmt.Sprintf("%s_%s%s", inv.NamaBarang, tanggalPembelian, ext)
+    log.Printf("Generated new file name: %s", newFileName)
+
+    // Menyimpan file ke folder storage
+    filePath := filepath.Join(storageDir, newFileName)
+    if err := c.SaveUploadedFile(file, filePath); err != nil {
+        log.Printf("Failed to save file: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+        return
+    }
+    log.Printf("File saved to: %s", filePath)
+
+    // Membuat path yang bisa diakses melalui URL
+    relativePath := strings.TrimPrefix(filepath.ToSlash(filePath), "./") // Menghilangkan './'
+    uploadNotaPath := fmt.Sprintf("http://localhost:8080/%s", relativePath)
+
+    // Update record Inventaris dengan path file
+    inv.UploadNota = uploadNotaPath
+    if err := db.Save(&inv).Error; err != nil {
+        log.Printf("Failed to update database: %v", err)
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update database"})
+        return
+    }
+    log.Println("Database updated with new file path")
+
+    // Menampilkan hasil
+    c.JSON(http.StatusOK, gin.H{
+        "message": "File uploaded successfully",
+        "file":    uploadNotaPath,
+    })
 }
+

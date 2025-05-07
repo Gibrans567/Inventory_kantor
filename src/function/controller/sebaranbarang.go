@@ -154,7 +154,7 @@ func GetSebaranBarangByID(c *gin.Context) {
 		NamaBarang   string `json:"nama_barang"`
 		NamaUser     string `json:"nama"`
 		QtyBarang    int    `json:"qty_barang"`
-		PosisiAwal   string `json:"posisi_awal"`
+		PosisiAwal   *string `json:"posisi_awal"`
 		PosisiAkhir  string `json:"posisi_akhir"`
 		Status       string `json:"status"`
 		CreatedAt    time.Time `json:"created_at"`

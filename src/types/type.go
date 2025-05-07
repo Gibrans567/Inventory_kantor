@@ -95,7 +95,7 @@ type SebaranBarang struct {
     IdBarang          uint      `json:"id_barang"`
     IdUser            uint      `json:"id_user"`
     QtyBarang         int       `json:"qty_barang"`
-    PosisiAwal        string    `json:"posisi_awal"`
+    PosisiAwal        *string    `json:"posisi_awal"`
     PosisiAkhir       string    `json:"posisi_akhir"`
     Status            string    `json:"status"`
     CreatedAt         time.Time
