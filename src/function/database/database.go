@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql" // Import driver MySQL
@@ -16,11 +17,11 @@ var DB *gorm.DB
 const (
 	DBUser     = "root"
 	DBPassword = ""
-	DBHost     = "127.0.0.1"
 	DBPort     = "3306"
 	DBName     = "inventory_kantor"
 )
 
+var DBHost = os.Getenv("DB_HOST")
 // ConnectDB membuat database jika belum ada, lalu menghubungkan GORM ke MySQL.
 func ConnectDB() {
 	// 1. Buat koneksi awal tanpa memilih database
