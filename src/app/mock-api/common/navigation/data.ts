@@ -65,6 +65,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 icon: 'heroicons_outline:funnel',
                 link: '/dashboards/kategori',
             },
+            {
+                id: 'dashboards.barang-rusak',
+                title: 'Barang Rusak/Maintenance',
+                type: 'basic',
+                icon: 'heroicons_solid:wrench',
+                link: '/dashboards/barang-rusak',
+            },
         ],
     },
     {

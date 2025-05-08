@@ -89,6 +89,7 @@ export const appRoutes: Route[] = [
                 {path: 'history', loadChildren: () => import('app/modules/admin/dashboards/history/history.routes')},
                 {path: 'divisi', loadChildren: () => import('app/modules/admin/dashboards/divisi/divisi.routes')},
                 {path: 'kategori', loadChildren: () => import('app/modules/admin/dashboards/kategori/kategori.routes')},
+                {path: 'barang-rusak', loadChildren: () => import('app/modules/admin/dashboards/barang-rusak/barang-rusak.routes')},
             ]},
 
             // Apps
