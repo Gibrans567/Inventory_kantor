@@ -88,8 +88,8 @@ func SetupRouter(r *gin.Engine){
 	// RegisterBarangStatusRoutes registers all the barang status routes
 	barangStatusRoutes := r.Group("/barangStatus")
 	{
-	barangStatusRoutes.POST("/", controller.CreateBarangStatus)
-	barangStatusRoutes.GET("/", controller.GetAllBarangStatus)
+	barangStatusRoutes.POST("", controller.CreateBarangStatus)
+	barangStatusRoutes.GET("", controller.GetAllBarangStatus)
 	barangStatusRoutes.GET("/:id", controller.GetBarangStatus)
 	barangStatusRoutes.GET("/barang/:id", controller.GetBarangStatusByBarang)
 	barangStatusRoutes.GET("/sebaran/:id", controller.GetBarangStatusBySebaran)
@@ -100,7 +100,7 @@ func SetupRouter(r *gin.Engine){
 	MultiUploadGambarRoutes := r.Group("/MultiUploadGambar")
 	{
 	MultiUploadGambarRoutes.POST("", controller.UploadGambarMulti)
-	MultiUploadGambarRoutes.GET("/", controller.GetAllBarangFoto)
+	MultiUploadGambarRoutes.GET("", controller.GetAllBarangFoto)
 	MultiUploadGambarRoutes.GET("/:id", controller.GetBarangFoto)
 	MultiUploadGambarRoutes.GET("/barang/:id", controller.GetBarangFotoByBarang)
 	MultiUploadGambarRoutes.POST("/:id", controller.UpdateBarangFoto)

@@ -171,10 +171,10 @@ func UploadGambarMulti(c *gin.Context) {
 }
 
 // GetBarangFoto retrieves a photo by ID
-func GetBarangFoto(ctx *gin.Context) {
-    id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
+func GetBarangFoto(c *gin.Context) {
+    id, err := strconv.ParseUint(c.Param("id"), 10, 32)
     if err != nil {
-        ctx.JSON(http.StatusBadRequest, gin.H{
+        c.JSON(http.StatusBadRequest, gin.H{
             "status": "error",
             "message": "Invalid ID format",
             "foto": nil,
@@ -187,7 +187,7 @@ func GetBarangFoto(ctx *gin.Context) {
 
     var barangFoto types.BarangFoto
     if err := db.First(&barangFoto, id).Error; err != nil {
-        ctx.JSON(http.StatusNotFound, gin.H{
+        c.JSON(http.StatusNotFound, gin.H{
             "status": "error",
             "message": "Record not found",
             "foto": nil,
@@ -195,7 +195,7 @@ func GetBarangFoto(ctx *gin.Context) {
         return
     }
 
-    ctx.JSON(http.StatusOK, gin.H{
+    c.JSON(http.StatusOK, gin.H{
         "status": "success",
         "message": "Photo found",
         "foto": barangFoto,
@@ -203,13 +203,13 @@ func GetBarangFoto(ctx *gin.Context) {
 }
 
 // GetAllBarangFoto retrieves all photo records
-func GetAllBarangFoto(ctx *gin.Context) {
+func GetAllBarangFoto(c *gin.Context) {
     // Get the database connection
     db := database.GetDB()
 
     var barangFotoList []types.BarangFoto
     if err := db.Find(&barangFotoList).Error; err != nil {
-        ctx.JSON(http.StatusInternalServerError, gin.H{
+        c.JSON(http.StatusInternalServerError, gin.H{
             "status": "error",
             "message": err.Error(),
             "foto": nil,
@@ -217,17 +217,17 @@ func GetAllBarangFoto(ctx *gin.Context) {
         return
     }
 
-    ctx.JSON(http.StatusOK, gin.H{
+    c.JSON(http.StatusOK, gin.H{
         "status": "success",
         "message": "All photos retrieved",
         "foto": barangFotoList,
     })
 }
 
-func GetBarangFotoByBarang(ctx *gin.Context) {
-    id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
+func GetBarangFotoByBarang(c *gin.Context) {
+    id, err := strconv.ParseUint(c.Param("id"), 10, 32)
     if err != nil {
-        ctx.JSON(http.StatusBadRequest, gin.H{
+        c.JSON(http.StatusBadRequest, gin.H{
             "status": "error",
             "message": "Invalid ID format",
             "foto": nil,
@@ -240,7 +240,7 @@ func GetBarangFotoByBarang(ctx *gin.Context) {
 
     var barangFotoList []types.BarangFoto
     if err := db.Where("id_barang = ?", id).Find(&barangFotoList).Error; err != nil {
-        ctx.JSON(http.StatusInternalServerError, gin.H{
+        c.JSON(http.StatusInternalServerError, gin.H{
             "status": "error",
             "message": err.Error(),
             "foto": nil,
@@ -249,7 +249,7 @@ func GetBarangFotoByBarang(ctx *gin.Context) {
     }
 
     if len(barangFotoList) == 0 {
-        ctx.JSON(http.StatusNotFound, gin.H{
+        c.JSON(http.StatusNotFound, gin.H{
             "status": "error",
             "message": "No photos found for this item",
             "foto": nil,
@@ -258,7 +258,7 @@ func GetBarangFotoByBarang(ctx *gin.Context) {
     }
 
     // Success response
-    ctx.JSON(http.StatusOK, gin.H{
+    c.JSON(http.StatusOK, gin.H{
         "status": "success",
         "message": "Photos retrieved successfully",
         "foto": barangFotoList,
@@ -266,10 +266,10 @@ func GetBarangFotoByBarang(ctx *gin.Context) {
 }
 
 // UpdateBarangFoto updates an existing photo record
-func UpdateBarangFoto(ctx *gin.Context) {
-	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
+func UpdateBarangFoto(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
 
@@ -279,23 +279,23 @@ func UpdateBarangFoto(ctx *gin.Context) {
 	// Check if record exists
 	var existingFoto types.BarangFoto
 	if err := db.First(&existingFoto, id).Error; err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "Record not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Record not found"})
 		return
 	}
 
 	// Parse the form data
-	if err := ctx.Request.ParseMultipartForm(10 << 20); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Unable to parse form"})
+	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Unable to parse form"})
 		return
 	}
 
 	// Update item ID if provided
-	if idBarang, err := strconv.ParseUint(ctx.PostForm("id_barang"), 10, 32); err == nil {
+	if idBarang, err := strconv.ParseUint(c.PostForm("id_barang"), 10, 32); err == nil {
 		existingFoto.IdBarang = uint(idBarang)
 	}
 
 	// Update photo if provided
-	file, fileHeader, err := ctx.Request.FormFile("foto")
+	file, fileHeader, err := c.Request.FormFile("foto")
 	if err == nil {
 		defer file.Close()
 
@@ -313,14 +313,14 @@ func UpdateBarangFoto(ctx *gin.Context) {
 		}
 
 		if !valid {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type. Only image files are allowed"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid file type. Only image files are allowed"})
 			return
 		}
 
 		// Menambahkan pembatasan ukuran file (maksimal 5MB)
 		const MaxFileSize = 5 * 1024 * 1024 // 5 MB
 		if fileHeader.Size > MaxFileSize {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "File size exceeds the 5MB limit"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "File size exceeds the 5MB limit"})
 			return
 		}
 
@@ -332,7 +332,7 @@ func UpdateBarangFoto(ctx *gin.Context) {
 		if _, err := os.Stat(storageDir); os.IsNotExist(err) {
 			err := os.MkdirAll(storageDir, os.ModePerm)
 			if err != nil {
-				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create storage directory"})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create storage directory"})
 				return
 			}
 		}
@@ -344,8 +344,8 @@ func UpdateBarangFoto(ctx *gin.Context) {
 			newFileName := fmt.Sprintf("barang_%d_%s%s", existingFoto.IdBarang, currentDate.Format("2006-01-02"), ext)
 			filePath := filepath.Join(storageDir, newFileName)
 			
-			if err := ctx.SaveUploadedFile(fileHeader, filePath); err != nil {
-				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+			if err := c.SaveUploadedFile(fileHeader, filePath); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 				return
 			}
 			
@@ -358,8 +358,8 @@ func UpdateBarangFoto(ctx *gin.Context) {
 			newFileName := fmt.Sprintf("%s_%s%s", inv.NamaBarang, tanggalPembelian, ext)
 			filePath := filepath.Join(storageDir, newFileName)
 			
-			if err := ctx.SaveUploadedFile(fileHeader, filePath); err != nil {
-				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+			if err := c.SaveUploadedFile(fileHeader, filePath); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
 				return
 			}
 			
@@ -371,18 +371,18 @@ func UpdateBarangFoto(ctx *gin.Context) {
 
 	// Save the updated record
 	if err := db.Save(&existingFoto).Error; err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"data": existingFoto})
+	c.JSON(http.StatusOK, gin.H{"data": existingFoto})
 }
 
 // DeleteBarangFoto deletes a photo record by ID
-func DeleteBarangFoto(ctx *gin.Context) {
-	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
+func DeleteBarangFoto(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
 
@@ -392,23 +392,23 @@ func DeleteBarangFoto(ctx *gin.Context) {
 	// Delete the record
 	result := db.Delete(&types.BarangFoto{}, id)
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
 
 	if result.RowsAffected == 0 {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Record with ID %d not found", id)})
+		c.JSON(http.StatusNotFound, gin.H{"error": fmt.Sprintf("Record with ID %d not found", id)})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Record deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Record deleted successfully"})
 }
 
 // DeleteAllBarangFotoByBarang deletes all photos for a specific item
-func DeleteAllBarangFotoByBarang(ctx *gin.Context) {
-	id, err := strconv.ParseUint(ctx.Param("id"), 10, 32)
+func DeleteAllBarangFotoByBarang(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
 		return
 	}
 
@@ -418,11 +418,11 @@ func DeleteAllBarangFotoByBarang(ctx *gin.Context) {
 	// Delete all records with the specified barang ID
 	result := db.Where("id_barang = ?", id).Delete(&types.BarangFoto{})
 	if result.Error != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "All photos for this item deleted successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "All photos for this item deleted successfully"})
 }
 
 	

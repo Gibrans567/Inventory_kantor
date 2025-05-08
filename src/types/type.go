@@ -157,11 +157,14 @@ type BarangStatus struct {
     IdSebaranBarang  uint      `json:"id_sebaran_barang"`
     Status           string    `json:"status"`
     Note             string    `json:"note"`
+    QtyBarang        int       `json:"qty_barang"`
+    PosisiAkhir      string    `json:"posisi_akhir"`  // Tambahkan ini
     CreatedAt        time.Time
     UpdatedAt        time.Time
-    Inventaris       Inventaris      `gorm:"foreignKey:IdBarang" json:"-"`      // Many to One
-    SebaranBarang    SebaranBarang   `gorm:"foreignKey:IdSebaranBarang" json:"-"`  // Many to One
+    Inventaris       Inventaris      `gorm:"foreignKey:IdBarang" json:"-"`
+    SebaranBarang    SebaranBarang   `gorm:"foreignKey:IdSebaranBarang" json:"-"`
 }
+
 
 type BarangFoto struct {
     ID               uint      `json:"id" gorm:"primaryKey"`
