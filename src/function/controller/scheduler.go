@@ -17,8 +17,6 @@ import (
 )
 
 
-
-
 func ApplyDepresiasi(c *gin.Context) {
 	// Ambil koneksi ke database
 	db := database.GetDB()

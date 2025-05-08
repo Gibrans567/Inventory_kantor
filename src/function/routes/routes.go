@@ -61,7 +61,8 @@ func SetupRouter(r *gin.Engine){
 		sebaranBarang.POST("", controller.CreateSebaranBarang)
 		sebaranBarang.GET("", controller.GetAllSebaranBarang)
 		sebaranBarang.GET("/:id", controller.GetSebaranBarangByID)
-		sebaranBarang.PUT("/:id", controller.UpdateSebaranBarang)
+		sebaranBarang.PUT("/Edit/:id", controller.UpdateSebaranBarang)
+		sebaranBarang.POST("/pindah", controller.MoveSebaranBarang)
 		sebaranBarang.DELETE("/:id", controller.DeleteSebaranBarang)
 	}
 
@@ -82,6 +83,29 @@ func SetupRouter(r *gin.Engine){
 		historyRoutes.GET("/:id", controller.GetHistoryByID)
 		historyRoutes.POST("/:id", controller.UpdateHistory)
 		historyRoutes.DELETE("/:id", controller.DeleteHistory)
+	}
+
+	// RegisterBarangStatusRoutes registers all the barang status routes
+	barangStatusRoutes := r.Group("/barangStatus")
+	{
+	barangStatusRoutes.POST("/", controller.CreateBarangStatus)
+	barangStatusRoutes.GET("/", controller.GetAllBarangStatus)
+	barangStatusRoutes.GET("/:id", controller.GetBarangStatus)
+	barangStatusRoutes.GET("/barang/:id", controller.GetBarangStatusByBarang)
+	barangStatusRoutes.GET("/sebaran/:id", controller.GetBarangStatusBySebaran)
+	barangStatusRoutes.PUT("/:id", controller.UpdateBarangStatus)
+	barangStatusRoutes.DELETE("/:id", controller.DeleteBarangStatus)
+	}
+
+	MultiUploadGambarRoutes := r.Group("/MultiUploadGambar")
+	{
+	MultiUploadGambarRoutes.POST("", controller.UploadGambarMulti)
+	MultiUploadGambarRoutes.GET("/", controller.GetAllBarangFoto)
+	MultiUploadGambarRoutes.GET("/:id", controller.GetBarangFoto)
+	MultiUploadGambarRoutes.GET("/barang/:id", controller.GetBarangFotoByBarang)
+	MultiUploadGambarRoutes.POST("/:id", controller.UpdateBarangFoto)
+	MultiUploadGambarRoutes.DELETE("/:id", controller.DeleteBarangFoto)
+	MultiUploadGambarRoutes.DELETE("/barang/:id", controller.DeleteAllBarangFotoByBarang)
 	}
 
 	schedulerRoutes := r.Group("/scheduler")

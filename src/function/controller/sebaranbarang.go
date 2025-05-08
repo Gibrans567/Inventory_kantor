@@ -79,14 +79,22 @@ func CreateSebaranBarang(c *gin.Context) {
 	}
 	
 	// Membuat pesan history dengan format yang diminta
-	historyKeterangan := fmt.Sprintf("Barang %s telah dipindahkan oleh %s dari divisi %s sebanyak %d dari %s ke %s pada %s", 
+		posisiAwal := "-"
+	if sebaranBarang.PosisiAwal != nil {
+		posisiAwal = *sebaranBarang.PosisiAwal
+	}
+
+	historyKeterangan := fmt.Sprintf(
+		"Barang %s telah dipindahkan oleh %s dari divisi %s sebanyak %d dari %s ke %s pada %s",
 		barang.NamaBarang,
 		user.Name,
 		divisi.NamaDivisi,
 		sebaranBarang.QtyBarang,
-		sebaranBarang.PosisiAwal, // posisi awal (gudang)
-		sebaranBarang.PosisiAkhir, // posisi akhir (lokasi baru)
-		now.Format("02-01-2006 15:04:05"))
+		posisiAwal,
+		sebaranBarang.PosisiAkhir,
+		now.Format("02-01-2006 15:04:05"),
+)
+
 	
 	history := types.History{
 		Kategori:   "Perpindahan Barang",
@@ -288,4 +296,132 @@ func DeleteSebaranBarang(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusNoContent, gin.H{"message": "Deleted successfully"})
+}
+
+// MoveSebaranBarang - Memindahkan sebagian qty dari SebaranBarang ke posisi baru
+func MoveSebaranBarang(c *gin.Context) {
+	var input struct {
+		IDSebaran    uint   `json:"id_sebaran"`    // ID SebaranBarang sumber
+		QtyBarang    int    `json:"qty_barang"`    // Jumlah barang yang dipindahkan
+		PosisiAkhir  string `json:"posisi_akhir"`  // Tujuan pemindahan
+		Status       string `json:"status"`        // Status baru (jika perlu)
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	db := database.GetDB()
+	tx := db.Begin()
+
+	var sumber types.SebaranBarang
+	if err := tx.Preload("User").First(&sumber, input.IDSebaran).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusNotFound, gin.H{"error": "SebaranBarang sumber tidak ditemukan"})
+		return
+	}
+
+	// Pastikan qty cukup untuk dipindahkan
+	if sumber.QtyBarang < input.QtyBarang {
+		tx.Rollback()
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Qty Barang yang tersedia tidak cukup di sebaran sumber"})
+		return
+	}
+	
+	// Kurangi qty dari sumber
+	sumber.QtyBarang -= input.QtyBarang
+
+	if sumber.QtyBarang == 0 {
+		// Jika jumlah menjadi 0, hapus data sumber
+		if err := tx.Delete(&sumber).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus sebaran sumber setelah qty 0"})
+			return
+		}
+	} else {
+		// Kalau tidak 0, simpan perubahan
+		if err := tx.Save(&sumber).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengupdate sumber sebaran barang"})
+			return
+		}
+	}
+
+
+	// Cek apakah posisi akhir untuk id_barang yang sama sudah ada
+	var target types.SebaranBarang
+	err := tx.Where("id_barang = ? AND posisi_akhir = ?", sumber.IdBarang, input.PosisiAkhir).First(&target).Error
+
+	if err == nil {
+		// Jika ada, tambahkan qty ke target
+		target.QtyBarang += input.QtyBarang
+		if err := tx.Save(&target).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menambahkan ke sebaran target"})
+			return
+		}
+	} else {
+		// Jika belum ada, buat sebaran baru
+		newSebaran := types.SebaranBarang{
+			IdBarang:    sumber.IdBarang,
+			IdDivisi:    sumber.IdDivisi,
+			QtyBarang:   input.QtyBarang,
+			PosisiAwal: StringToPtr(sumber.PosisiAkhir),
+			PosisiAkhir: input.PosisiAkhir,
+			Status:      input.Status,
+			User:        sumber.User,
+		}
+
+		if err := tx.Create(&newSebaran).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat sebaran baru"})
+			return
+		}
+	}
+
+	// Buat history pemindahan
+	var barang types.Inventaris
+	if err := tx.First(&barang, sumber.IdBarang).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Barang tidak ditemukan untuk history"})
+		return
+	}
+
+	var divisi types.Divisi
+	if err := tx.First(&divisi, sumber.IdDivisi).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Divisi tidak ditemukan untuk history"})
+		return
+	}
+
+	now := time.Now()
+	history := types.History{
+		Kategori: "Perpindahan Barang",
+		Keterangan: fmt.Sprintf("Barang %s telah dipindahkan oleh %s dari divisi %s sebanyak %d dari %s ke %s pada %s",
+			barang.NamaBarang,
+			sumber.User.Name,
+			divisi.NamaDivisi,
+			input.QtyBarang,
+			sumber.PosisiAkhir,
+			input.PosisiAkhir,
+			now.Format("02-01-2006 15:04:05")),
+		CreatedAt: now,
+	}
+
+	if err := tx.Create(&history).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mencatat history"})
+		return
+	}
+
+	tx.Commit()
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Barang berhasil dipindahkan ke posisi baru",
+	})
+}
+
+func StringToPtr(s string) *string {
+    return &s
 }

@@ -151,6 +151,27 @@ type DeleteAllByTimeframeRequest struct {
 	EndDate   string `json:"end_date" binding:"required"`
 }
 
+type BarangStatus struct {
+    ID               uint      `json:"id" gorm:"primaryKey"`
+    IdBarang         uint      `json:"id_barang"`
+    IdSebaranBarang  uint      `json:"id_sebaran_barang"`
+    Status           string    `json:"status"`
+    Note             string    `json:"note"`
+    CreatedAt        time.Time
+    UpdatedAt        time.Time
+    Inventaris       Inventaris      `gorm:"foreignKey:IdBarang" json:"-"`      // Many to One
+    SebaranBarang    SebaranBarang   `gorm:"foreignKey:IdSebaranBarang" json:"-"`  // Many to One
+}
+
+type BarangFoto struct {
+    ID               uint      `json:"id" gorm:"primaryKey"`
+    IdBarang         uint      `json:"id_barang"`
+    LinkFoto         string    `json:"link_foto"`    // URL or file path to the image
+    CreatedAt        time.Time
+    UpdatedAt        time.Time
+    Inventaris       Inventaris `gorm:"foreignKey:IdBarang" json:"-"`  // Many to One
+}
+
 //audit
 
 //ekstrak 
