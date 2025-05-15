@@ -38,7 +38,7 @@ import { AddGudangComponent } from './add-gudang/add-gudang.component';
   styleUrl: './gudang.component.scss'
 })
 export class GudangComponent {
-  displayedColumns: string[] = ['nama_gudang', 'lokasi_gudang'];
+  displayedColumns: string[] = ['nama_gudang', 'lokasi_gudang','action'];
 
   dataSource = new MatTableDataSource<any>([]);
   isLoading: boolean = false;

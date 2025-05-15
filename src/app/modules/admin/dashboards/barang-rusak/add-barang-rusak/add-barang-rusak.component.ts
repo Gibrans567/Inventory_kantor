@@ -107,98 +107,84 @@ export class AddBarangRusakComponent implements OnInit {
 
     // Handle form submission
     async onSubmit() {
-        if (!this.BarangRusakForm.valid) {
-            this.showWarningDialog('Mohon isi semua field yang wajib diisi');
-            return;
-        }
-
-        // Dapatkan status dari form
-        const status = this.BarangRusakForm.value.posisi_awal;
-
-        // Validasi jumlah barang tidak melebihi yang tersedia
-        const qtyBarang = this.BarangRusakForm.value.qty_barang;
-        const qtyTersedia = this.sebaranBarang?.qty_tersedia;
-
-        if (qtyBarang > qtyTersedia) {
-            this.showWarningDialog(`Jumlah barang tidak boleh melebihi stok tersedia (${qtyTersedia})`);
-            return;
-        }
-
-        // Konversi user_id menjadi angka
-        const userId = Number(this.BarangRusakForm.value.user_id);
-
-        // Tampilkan dialog konfirmasi sebelum melanjutkan
-        const confirmation = this._fuseConfirmationService.open({
-            title: 'Tambah Sebaran Barang',
-            message: `Anda yakin ingin menambahkan ${qtyBarang} ${this.sebaranBarang.nama_barang} ke distribusi?`,
-            icon: {
-                show: true,
-                name: 'heroicons_outline:question-mark-circle',
-                color: 'info'
-            },
-            actions: {
-                confirm: {
-                    label: 'Ya, Tambahkan',
-                    color: 'primary'
-                },
-                cancel: {
-                    label: 'Batal'
-                }
-            }
-        });
-
-        confirmation.afterClosed().subscribe(async (result) => {
-            if (result === 'confirmed') {
-                this.isLoading = true;
-
-                try {
-                    // Cek status yang dipilih dan proses pengiriman data sesuai status
-                    if (status === 'Maintenance' || status === 'Barang rusak') {
-                        const catatanValue = this.BarangRusakForm.value.catatan;
-
-                        // Form pengiriman untuk status Maintenance atau Barang Rusak
-                        const formData = {
-                            id_barang: this.sebaranBarang.id_barang,  // ID Barang diambil dari data yang diterima
-                            id_sebaran_barang: this.sebaranBarang.id,  // ID Sebaran Barang
-                            status: "Barang rusak", // Tentukan status
-                            note: catatanValue,  // Tambahkan catatan dari form
-                            qty_barang: qtyBarang,  // Ambil qty_barang dari form
-                            posisi_akhir: this.sebaranBarang.posisi_akhir,  // Posisi akhir yang baru
-                        };
-
-                        // First API call: Update status barang
-                        const response = await this._apiService.post(`/barangStatus`, formData);
-                        console.log('Response Status Update:', response);
-
-                        this.showSuccessDialog('Status barang berhasil diperbarui!');
-                        this.dialogRef.close('refresh');
-
-                    } else if (status === 'memindahkan') {
-                        // Form pengiriman untuk status Memindahkan - disesuaikan dengan format API
-                        const formDataMemindahkan = {
-                            "id_sebaran": this.sebaranBarang.id,  // ID Sebaran Barang
-                            "qty_barang": qtyBarang,
-                            "posisi_akhir": this.BarangRusakForm.value.posisi_akhir, // Lokasi tujuan
-                            "status": "Dipindahkan" // Status dipindahkan sesuai dengan API
-                        };
-
-                        // API call untuk Memindahkan barang
-                        const responseMemindahkan = await this._apiService.post('/sebaranBarang/pindah', formDataMemindahkan);
-                        console.log('Response Memindahkan:', responseMemindahkan);
-
-                        this.showSuccessDialog('Barang berhasil dipindahkan!');
-                        this.dialogRef.close('refresh');
-                    }
-
-                } catch (error) {
-                    console.error('Error:', error);
-                    this.showErrorDialog('Gagal memproses permintaan');
-                } finally {
-                    this.isLoading = false;
-                }
-            }
-        });
+    if (!this.BarangRusakForm.valid) {
+        this.showWarningDialog('Mohon isi semua field yang wajib diisi');
+        return;
     }
+
+    const status = this.BarangRusakForm.value.posisi_awal;
+    const qtyBarang = this.BarangRusakForm.value.qty_barang;
+    const qtyTersedia = this.sebaranBarang?.qty_tersedia;
+
+    if (qtyBarang > qtyTersedia) {
+        this.showWarningDialog(`Jumlah barang tidak boleh melebihi stok tersedia (${qtyTersedia})`);
+        return;
+    }
+
+    const userId = Number(this.BarangRusakForm.value.user_id);
+
+    const confirmation = this._fuseConfirmationService.open({
+        title: 'Tambah Sebaran Barang',
+        message: `Anda yakin ingin menambahkan ${qtyBarang} ${this.sebaranBarang.nama_barang} ke distribusi?`,
+        icon: {
+            show: true,
+            name: 'heroicons_outline:question-mark-circle',
+            color: 'info'
+        },
+        actions: {
+            confirm: { label: 'Ya, Tambahkan', color: 'primary' },
+            cancel: { label: 'Batal' }
+        }
+    });
+
+    confirmation.afterClosed().subscribe(async (result) => {
+        if (result === 'confirmed') {
+            this.isLoading = true;
+
+            try {
+                if (status === 'Maintenance' || status === 'Barang rusak') {
+                    const catatanValue = this.BarangRusakForm.value.catatan;
+
+                    const formData = {
+                        id_barang: this.sebaranBarang.id_barang,
+                        id_sebaran_barang: this.sebaranBarang.id,
+                        status: status, 
+                        note: catatanValue,
+                        qty_barang: qtyBarang,
+                        posisi_akhir: this.sebaranBarang.posisi_akhir,
+                    };
+
+                    const response = await this._apiService.post(`/barangStatus`, formData);
+                    console.log('Response Status Update:', response);
+
+                    this.showSuccessDialog('Status barang berhasil diperbarui!');
+                    this.dialogRef.close('refresh');
+
+                } else if (status === 'memindahkan') {
+                    const formDataMemindahkan = {
+                        id_sebaran: this.sebaranBarang.id,
+                        qty_barang: qtyBarang,
+                        posisi_akhir: this.BarangRusakForm.value.posisi_akhir,
+                        status: "Dipindahkan" // ✅ API tetap pakai teks "Dipindahkan"
+                    };
+
+                    const responseMemindahkan = await this._apiService.post('/sebaranBarang/pindah', formDataMemindahkan);
+                    console.log('Response Memindahkan:', responseMemindahkan);
+
+                    this.showSuccessDialog('Barang berhasil dipindahkan!');
+                    this.dialogRef.close('refresh');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                this.showErrorDialog('Gagal memproses permintaan');
+            } finally {
+                this.isLoading = false;
+            }
+        }
+    });
+}
+
 
     // Helper method to prevent invalid characters
     preventInvalidChars(event: any) {

@@ -71,7 +71,6 @@ export class AddInventarisComponent {
             tanggal_pembelian: ['', Validators.required],
             gudang_id: [null, Validators.required],
             kategori_id: [null, Validators.required],
-            divisi_id: [null, Validators.required],
             user_id: [null, Validators.required],
             upload_nota: [null ,Validators.required] // Tambahkan field untuk upload_nota
         });
@@ -263,7 +262,7 @@ export class AddInventarisComponent {
         }
     }
 
-    
+
     showSuccessDialog(message: string) {
         this.fuseConfirmationService.open({
             title: 'Berhasil',

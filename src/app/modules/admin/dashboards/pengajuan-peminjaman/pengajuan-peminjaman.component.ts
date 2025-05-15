@@ -43,7 +43,7 @@ import { AddPengajuanPeminjamanComponent } from './add-pengajuan-peminjaman/add-
 })
 export class PengajuanPeminjamanComponent {
 
-    displayedColumns: string[] = ['nama_barang', 'name', 'qty_barang', 'nama_divisi', 'posisi_akhir', 'status_permohonan', 'note', 'action'];
+    displayedColumns: string[] = ['nama_barang', 'name', 'qty_barang', 'nama_divisi', 'status_permohonan', 'note', 'Yang Menyetujui','action'];
     dataSource = new MatTableDataSource<any>([]);
 
     @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -77,6 +77,7 @@ export class PengajuanPeminjamanComponent {
                     id_user: item.id_user || 'N/A',
                     id_divisi: item.id_divisi || 'N/A',
                     id_approver: item.id_approver || null,
+                    nama_approver: item.nama_approver || 'Belum ada yang Menyetujui',
                     status_kepemilikan: item.status_kepemilikan || '',
                     tanggal_pengajuan: item.tanggal_pengajuan || 'N/A',
                     status_permohonan: item.status_permohonan || 'Menunggu Approve',

@@ -1,4 +1,4 @@
-<!-- add-pengajuan.component.html -->
+<!-- add-pengajuan-peminjaman.component.html -->
 <div class="flex flex-col p-6 w-full max-h-screen overflow-auto">
     <!-- Header -->
     <div class="flex flex-0 items-center justify-between w-full sticky top-0 bg-white z-10 pb-2">
@@ -26,7 +26,7 @@
                 </div>
                 <div>
                     <div class="text-sm font-medium text-gray-500">Stok Tersedia</div>
-                    <div class="text-base font-bold">{{ barangDetail?.qty_tersedia || 0 }}</div>
+                    <div class="text-base font-bold">{{ barangDetail?.qty_barang || 0 }}</div>
                 </div>
                 <div>
                     <div class="text-sm font-medium text-gray-500">Gudang</div>
@@ -57,24 +57,6 @@
                     </div>
                 </div>
 
-                <!-- Divisi -->
-                <div class="w-full">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Divisi*</label>
-                    <select
-                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
-                        formControlName="id_divisi"
-                        required
-                    >
-                        <option value="" disabled selected>Pilih divisi</option>
-                        <option *ngFor="let divisi of divisiList" [value]="divisi.id">
-                            {{ divisi.nama_divisi }}
-                        </option>
-                    </select>
-                    <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('id_divisi')?.hasError('required') && pengajuanForm.get('id_divisi')?.touched">
-                        Divisi harus dipilih
-                    </div>
-                </div>
-
                 <!-- User -->
                 <div class="w-full">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Pengguna*</label>
@@ -85,7 +67,7 @@
                     >
                         <option value="" disabled selected>Pilih pengguna</option>
                         <option *ngFor="let user of userList" [value]="user.id">
-                            {{ user.nama }}
+                            {{ user.nama_user }}
                         </option>
                     </select>
                     <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('id_user')?.hasError('required') && pengajuanForm.get('id_user')?.touched">
@@ -116,20 +98,6 @@
                     </div>
                     <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('qty_barang')?.hasError('max') && pengajuanForm.get('qty_barang')?.touched">
                         Jumlah tidak boleh melebihi stok yang tersedia ({{ barangDetail?.qty_tersedia }})
-                    </div>
-                </div>
-
-                <!-- Posisi Akhir -->
-                <div class="w-full">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Posisi Akhir*</label>
-                    <input
-                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        formControlName="posisi_akhir"
-                        placeholder="Posisi akhir barang"
-                        required
-                    >
-                    <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('posisi_akhir')?.hasError('required') && pengajuanForm.get('posisi_akhir')?.touched">
-                        Posisi akhir harus diisi
                     </div>
                 </div>
 

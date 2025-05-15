@@ -48,18 +48,14 @@ export class AddPengajuanPeminjamanComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Initialize form controls sesuai dengan format API pengajuan
+    // Initialize form controls sesuai dengan format API pengajuan yang ditampilkan di Postman
     this.pengajuanForm = this.fb.group({
       id_barang: [null, Validators.required],
       id_user: [null, Validators.required],
-      id_divisi: [null, Validators.required],
       qty_barang: [null, [Validators.required, Validators.min(1)]],
-      note: ['', Validators.required],
-      posisi_akhir: ['', Validators.required]
+      note: ['', Validators.required]
     });
 
-    // Fetch lists for dropdowns
-    this.getDivisiList();
     this.getUserList();
     this.getInventarisList();
 
@@ -76,17 +72,6 @@ export class AddPengajuanPeminjamanComponent implements OnInit {
 
   onNoClick(): void {
     this.dialogRef.close();
-  }
-
-  // Get list of Divisi
-  async getDivisiList() {
-    try {
-      const res = await this._apiService.get('/divisi');
-      this.divisiList = res.data || []; // Assuming response has a 'data' field
-    } catch (error) {
-      console.error('Failed to fetch divisi data', error);
-      this.showErrorDialog('Gagal mengambil data divisi');
-    }
   }
 
   // Get list of Users
@@ -163,6 +148,14 @@ export class AddPengajuanPeminjamanComponent implements OnInit {
       return;
     }
 
+    // Prepare data for API request - ensuring all values are in the correct format
+    const requestData = {
+      id_barang: Number(this.pengajuanForm.value.id_barang),
+      id_user: Number(this.pengajuanForm.value.id_user),
+      qty_barang: Number(this.pengajuanForm.value.qty_barang),
+      note: this.pengajuanForm.value.note
+    };
+
     // Show confirmation dialog before proceeding
     const confirmation = this._fuseConfirmationService.open({
       title: 'Tambah Pengajuan',
@@ -190,7 +183,7 @@ export class AddPengajuanPeminjamanComponent implements OnInit {
 
         try {
           // POST request ke endpoint pengajuan dengan format yang sesuai
-          const response = await this._apiService.post('/pengajuan', this.pengajuanForm.value);
+          const response = await this._apiService.post('/pengajuan', requestData);
           console.log('Response:', response);
 
           // Show success dialog

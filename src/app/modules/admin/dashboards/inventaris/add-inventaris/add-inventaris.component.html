@@ -83,17 +83,6 @@
                 </select>
             </mat-form-field>
 
-            <!-- Divisi -->
-            <mat-form-field class="w-full mb-2">
-                <mat-label>Pilih Divisi</mat-label>
-                <select matNativeControl formControlName="divisi_id">
-                    <option value=""  disabled selected>-- Pilih Divisi --</option>
-                    <option *ngFor="let item of divisiList" [value]="item.id">
-                        {{ item.nama_divisi }}
-                    </option>
-                </select>
-            </mat-form-field>
-
             <!-- User -->
             <mat-form-field class="w-full mb-2">
                 <mat-label >Pilih User</mat-label>
