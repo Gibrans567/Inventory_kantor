@@ -1,10 +1,10 @@
 import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
-import { AddBarangRusakComponent } from './add-barang-rusak.component';
+import { PengajuanPeminjamanComponent } from './pengajuan-peminjaman.component';
 
 export default [
     {
         path: '',
-        component: AddBarangRusakComponent,
+        component: PengajuanPeminjamanComponent,
     },
 ] as Routes;

@@ -13,6 +13,7 @@ import { IonicModule } from '@ionic/angular';
 import { ApiService } from 'app/services/api.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { UpdateStatusComponent } from './update-status/update-status.component';
 
 @Component({
   selector: 'app-barang-rusak',
@@ -51,8 +52,8 @@ export class BarangRusakComponent {
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(
-    private apiService: ApiService, 
-    private route: ActivatedRoute, 
+    private apiService: ApiService,
+    private route: ActivatedRoute,
     private matDialog: MatDialog,
     private fuseConfirmationService: FuseConfirmationService
   ) {}
@@ -71,7 +72,7 @@ export class BarangRusakComponent {
     try {
       // Mengambil data barang status dari API
       const response = await this.apiService.get(`/barangStatus`);
-      
+
       // Memastikan response berhasil dan mengakses data barang
       const barangData = response?.dataBarang ?? [];  // Mengakses 'dataBarang' dari response
 
@@ -79,9 +80,12 @@ export class BarangRusakComponent {
       this.logAktivitas = barangData.map((item) => ({
         id: item.id,
         nama_barang: item.nama_barang,
-        note: item.note,  // Menambahkan kolom note
+        note: item.note,
         status: item.status,
+        posisi_akhir: item.posisi_akhir,
+        qty_barang: item.qty_barang,
       }));
+
 
       // Update dataSource dengan data barang terbaru
       this.dataSource.data = this.logAktivitas;
@@ -128,11 +132,10 @@ export class BarangRusakComponent {
   // Fungsi untuk menambahkan kategori baru (Anda bisa sesuaikan dengan fungsionalitas yang diinginkan)
 
   // Fungsi untuk menghapus kategori (sesuaikan sesuai dengan API dan fungsionalitas Anda)
-  deleteCategoryByName(namaKategori: string) {
-    // Menanyakan konfirmasi penghapusan
+  deleteCategoryById(id: string, namaBarang: string, posisiAkhir: string, qty_barang: number) {
     const confirm = this.fuseConfirmationService.open({
       title: 'Konfirmasi Hapus',
-      message: `Apakah Anda yakin ingin menghapus kategori "${namaKategori}"?`,
+      message: `Apakah Anda yakin ingin menghapus "${namaBarang}" dari "${posisiAkhir}" dengan jumlah ${qty_barang} barang?`,
       actions: {
         confirm: {
           label: 'Hapus',
@@ -146,18 +149,29 @@ export class BarangRusakComponent {
     confirm.afterClosed().subscribe(async (result) => {
       if (result === 'confirmed') {
         try {
-          // Panggil API untuk menghapus kategori berdasarkan nama
-          await this.apiService.delete(`/kategori/${namaKategori}`);
-
-          // Mengambil data kategori terbaru setelah penghapusan
-          this.getBarangStatus(); // Memanggil fungsi untuk memperbarui data kategori dengan data terbaru
-
-          // Memberi feedback ke user bahwa kategori berhasil dihapus
-          console.log(`Kategori "${namaKategori}" berhasil dihapus`);
+          await this.apiService.delete(`/barangStatus/${id}`);
+          this.getBarangStatus();
+          console.log(`"${namaBarang}" dari "${posisiAkhir}" berhasil dihapus`);
         } catch (error) {
-          console.error('Gagal menghapus kategori', error);
+          console.error('Gagal menghapus data', error);
         }
       }
     });
   }
+
+  PerbaruiStatus(id: number) {
+  const dialogRef = this.matDialog.open(UpdateStatusComponent, {
+    width: window.innerWidth < 600 ? '90%' : '50%',
+    maxWidth: '100vw',
+    data: { barangId: id } // Pass the ID to the dialog
+  });
+
+  dialogRef.afterClosed().subscribe((result) => {
+    // Mengecek apakah hasil dialog adalah 'refresh' yang menandakan status berhasil diperbarui
+    if (result === 'refresh') {
+      this.getBarangStatus(); // Memanggil fungsi untuk mendapatkan data terbaru
+    }
+  });
+}
+
 }

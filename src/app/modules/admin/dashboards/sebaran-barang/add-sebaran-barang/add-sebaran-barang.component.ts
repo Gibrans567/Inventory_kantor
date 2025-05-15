@@ -29,7 +29,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 })
 export class AddSebaranBarangComponent implements OnInit {
 
-    inventarisForm!: FormGroup;
+    SebaranBarangForm!: FormGroup;
     isLoading = false;
     divisiList: any[] = [];
     userList: any[] = [];
@@ -54,7 +54,7 @@ export class AddSebaranBarangComponent implements OnInit {
       this.barangDetail = this.data;
 
       // Initialize form controls - hanya field yang diperlukan
-      this.inventarisForm = this.fb.group({
+      this.SebaranBarangForm = this.fb.group({
         qty_barang: [null, [Validators.required, Validators.min(1), Validators.max(this.barangDetail?.qty_tersedia || 999999)]],
         posisi_awal: [this.barangDetail?.nama_gudang || ''],
         posisi_akhir: ['', Validators.required],
@@ -95,13 +95,13 @@ export class AddSebaranBarangComponent implements OnInit {
 
     // Handle form submission
     async onSubmit() {
-        if (!this.inventarisForm.valid) {
+        if (!this.SebaranBarangForm.valid) {
           this.showWarningDialog('Mohon isi semua field yang wajib diisi');
           return;
         }
 
         // Validasi jumlah barang tidak melebihi yang tersedia
-        const qtyBarang = this.inventarisForm.value.qty_barang;
+        const qtyBarang = this.SebaranBarangForm.value.qty_barang;
         const qtyTersedia = this.barangDetail?.qty_tersedia;
 
         if (qtyBarang > qtyTersedia) {
@@ -110,7 +110,7 @@ export class AddSebaranBarangComponent implements OnInit {
         }
 
         // Get user_id as number
-        const userId = Number(this.inventarisForm.value.user_id);  // Konversi ke angka
+        const userId = Number(this.SebaranBarangForm.value.user_id);  // Konversi ke angka
 
         // Show confirmation dialog before proceeding
         const confirmation = this._fuseConfirmationService.open({
@@ -141,11 +141,11 @@ export class AddSebaranBarangComponent implements OnInit {
               // Prepare data for the POST request
               const formData = {
                 id_barang: this.barangDetail.id,
-                id_divisi: this.inventarisForm.value.divisi_id,
+                id_divisi: this.SebaranBarangForm.value.divisi_id,
                 id_user: userId,  // Kirimkan id_user sebagai number
                 qty_barang: qtyBarang,
-                posisi_awal: this.inventarisForm.value.posisi_awal,
-                posisi_akhir: this.inventarisForm.value.posisi_akhir
+                posisi_awal: this.SebaranBarangForm.value.posisi_awal,
+                posisi_akhir: this.SebaranBarangForm.value.posisi_akhir
               };
 
               // Make POST request to add new sebaran barang

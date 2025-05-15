@@ -53,4 +53,18 @@ export class ApiService {
                 }
             )
     }
+
+    async put(endPoint: string, data: any) {
+        this._loadingService.show();
+        return await axios.put(this.apiUrl + endPoint, data).then(
+            async response => {
+                this._loadingService.hide()
+                return response.data
+            }).catch(
+                async error => {
+                    this._loadingService.hide()
+                    console.log(error)
+                }
+            )
+    }
 }

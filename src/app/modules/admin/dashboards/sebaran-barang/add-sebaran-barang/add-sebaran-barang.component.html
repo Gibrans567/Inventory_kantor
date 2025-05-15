@@ -36,7 +36,7 @@
         </div>
 
         <!-- Form -->
-        <form [formGroup]="inventarisForm" (ngSubmit)="onSubmit()" class="w-full">
+        <form [formGroup]="SebaranBarangForm" (ngSubmit)="onSubmit()" class="w-full">
             <div class="flex flex-col space-y-4">
                 <!-- Quantity -->
                 <div class="w-full">
@@ -50,24 +50,14 @@
                         [max]="barangDetail?.qty_tersedia"
                         (input)="preventInvalidChars($event)"
                     >
-                    <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('qty_barang')?.hasError('required') && inventarisForm.get('qty_barang')?.touched">
+                    <div class="text-red-500 text-sm mt-1" *ngIf="SebaranBarangForm.get('qty_barang')?.hasError('required') && SebaranBarangForm.get('qty_barang')?.touched">
                         Jumlah harus diisi
                     </div>
-                    <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('qty_barang')?.hasError('max') && inventarisForm.get('qty_barang')?.touched">
+                    <div class="text-red-500 text-sm mt-1" *ngIf="SebaranBarangForm.get('qty_barang')?.hasError('max') && SebaranBarangForm.get('qty_barang')?.touched">
                         Jumlah tidak boleh melebihi stok yang tersedia ({{ barangDetail?.qty_tersedia }}).
                     </div>
                 </div>
 
-
-                <!-- Posisi Awal -->
-                <div class="w-full">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Posisi Awal</label>
-                    <input
-                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        formControlName="posisi_awal"
-                        placeholder="Posisi awal barang (opsional)"
-                        [readonly]="true" >
-                </div>
 
                 <!-- Posisi Akhir -->
                 <div class="w-full">
@@ -78,7 +68,7 @@
                         placeholder="Posisi akhir barang"
                         required
                     >
-                    <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('posisi_akhir')?.hasError('required') && inventarisForm.get('posisi_akhir')?.touched">
+                    <div class="text-red-500 text-sm mt-1" *ngIf="SebaranBarangForm.get('posisi_akhir')?.hasError('required') && SebaranBarangForm.get('posisi_akhir')?.touched">
                         Posisi akhir harus diisi
                     </div>
                 </div>
@@ -96,7 +86,7 @@
                             {{ divisi.nama_divisi }}
                         </option>
                     </select>
-                    <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('divisi_id')?.hasError('required') && inventarisForm.get('divisi_id')?.touched">
+                    <div class="text-red-500 text-sm mt-1" *ngIf="SebaranBarangForm.get('divisi_id')?.hasError('required') && SebaranBarangForm.get('divisi_id')?.touched">
                         Divisi harus dipilih
                     </div>
                 </div>
@@ -109,13 +99,13 @@
                         formControlName="user_id"
                         required
                     >
-                        <option value="" disabled selected>Pilih pengguna</option>
+                        <option value="" disabled selected>Pilih Executor</option>
                         <option *ngFor="let user of userList" [value]="user.id">
                             {{ user.nama_user }}
                         </option>
                     </select>
-                    <div class="text-red-500 text-sm mt-1" *ngIf="inventarisForm.get('user_id')?.hasError('required') && inventarisForm.get('user_id')?.touched">
-                        Pengguna harus dipilih
+                    <div class="text-red-500 text-sm mt-1" *ngIf="SebaranBarangForm.get('user_id')?.hasError('required') && SebaranBarangForm.get('user_id')?.touched">
+                        Executor harus dipilih
                     </div>
                 </div>
             </div>
@@ -132,7 +122,7 @@
                 <button
                     type="submit"
                     class="bg-green-600 text-white px-4 py-2 rounded"
-                    [disabled]="inventarisForm.invalid || isLoading"
+                    [disabled]="SebaranBarangForm.invalid || isLoading"
                 >
                     <span *ngIf="!isLoading">Simpan Inventaris</span>
                     <div *ngIf="isLoading" class="flex items-center justify-center">

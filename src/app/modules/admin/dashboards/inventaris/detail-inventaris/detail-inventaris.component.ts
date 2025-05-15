@@ -14,6 +14,7 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
 import { AddSebaranBarangComponent } from 'app/modules/admin/dashboards/sebaran-barang/add-sebaran-barang/add-sebaran-barang.component';
+import { AddBarangRusakComponent } from 'app/modules/admin/dashboards/barang-rusak/add-barang-rusak/add-barang-rusak.component';
 import { FuseConfirmationService } from '@fuse/services/confirmation';
 
 
@@ -42,7 +43,7 @@ import { FuseConfirmationService } from '@fuse/services/confirmation';
   styleUrl: './detail-inventaris.component.scss'
 })
 export class DetailInventarisComponent {
-    displayedColumns: string[] = ['barang', 'user', 'qty_barang', 'posisi_awal', 'posisi_akhir'];
+    displayedColumns: string[] = ['barang', 'user', 'qty_barang', 'posisi_awal', 'posisi_akhir','action'];
     dataSource = new MatTableDataSource<any>([]);
 
     @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -91,6 +92,7 @@ export class DetailInventarisComponent {
                 qty_barang: barangData.qty_barang || 'Memuat Data....',
                 qty_tersedia: barangData.qty_tersedia || 'Barang Sudah Terpakai Semua',
                 qty_terpakai: barangData.qty_terpakai || 'Tidak Ada Barang Yang Terpakai',
+                qty_rusak: barangData.qty_rusak || 'Tidak Ada Barang Yang Rusak',
                 kategori_nama: barangData.kategori_nama || 'Memuat Data....',
                 nama_divisi: barangData.nama_divisi || 'Memuat Data....',
                 nama_gudang: barangData.nama_gudang || 'Memuat Data....',
@@ -114,6 +116,7 @@ export class DetailInventarisComponent {
                 qty_barang: 'Memuat Data....',
                 qty_tersedia: 'Memuat Data....',
                 qty_terpakai: 'Memuat Data....',
+                qty_rusak: 'Memuat Data....',
                 kategori_nama: 'Memuat Data....',
                 nama_divisi: 'Memuat Data....',
                 nama_gudang: 'Memuat Data....',
@@ -134,6 +137,34 @@ export class DetailInventarisComponent {
         try {
             const riwayatData = await this._apiService.get(`/sebaranBarang/${id}`);
             this.sebaranBarang = riwayatData.map(item => ({
+                id: item.id || 'Belum Ada Barang',
+                id_barang: item.id_barang || 'Belum Ada Barang',
+                barang: item.nama_barang || 'Belum Ada Barang',
+                createdAt: item.created_at || 'Belum Ada Barang',
+                divisi: item.nama_divisi || 'Belum Ada Barang',
+                posisi_akhir: item.posisi_akhir || 'Belum Ada Barang',
+                posisi_awal: item.posisi_awal || 'Tidak Memiliki Posisi Awal',
+                qty_barang: item.qty_barang || 'Belum Ada Barang',
+                updatedAt: item.updated_at || 'Belum Ada Barang',
+                user: item.nama || 'Belum Ada Barang'
+            }));
+
+            // Set data ke dataSource
+            this.dataSource.data = this.sebaranBarang;
+            this.dataSource.paginator = this.paginator;
+            this.dataSource.sort = this.sort;
+
+        } catch (error) {
+            console.error('Gagal memuat data riwayat barang:', error);
+            this.sebaranBarang = [{ /* Default data */ }];
+        }
+    }
+
+    async getRiwayatBarangByIdSebaran(id: string) {
+        try {
+            const riwayatData = await this._apiService.get(`/sebaranBarang/sebaran/${id}`);
+            this.sebaranBarang = riwayatData.map(item => ({
+                id: item.id || 'Belum Ada Barang',
                 barang: item.nama_barang || 'Belum Ada Barang',
                 createdAt: item.created_at || 'Belum Ada Barang',
                 divisi: item.nama_divisi || 'Belum Ada Barang',
@@ -214,6 +245,64 @@ export class DetailInventarisComponent {
           dismissible: true
         });
       }
+
+      deletesebaranBarang(sebaran: any) {
+        const confirm = this._fuseConfirmationService.open({
+          title: 'Konfirmasi Hapus',
+          message: `Apakah Anda ingin menghapus ${sebaran.barang} di ${sebaran.posisi_akhir} ini?`,
+          actions: {
+            confirm: {
+              label: 'Hapus',
+            },
+            cancel: {
+              label: 'Batal',
+            },
+          },
+        });
+
+        confirm.afterClosed().subscribe(async (result) => {
+          if (result === 'confirmed') {
+            try {
+              // Hapus data sebaran barang
+              await this._apiService.delete(`/sebaranBarang/${sebaran.id}`);
+
+              // Ambil ulang riwayat sebaran berdasarkan ID barang utama
+              if (this.id) {
+                this.getRiwayatBarangById(this.id);
+              }
+
+              console.log(`Sebaran barang "${sebaran.barang}" di "${sebaran.posisi_akhir}" berhasil dihapus`);
+            } catch (error) {
+              console.error('Gagal menghapus sebaran barang', error);
+            }
+          }
+        });
+      }
+
+
+
+
+      EditSebaranBarang(id: number) {
+        // Ambil data barang berdasarkan ID
+        const barang = this.sebaranBarang.find(item => item.id === id);
+
+        if (barang) {
+            this._matDialog.open(AddBarangRusakComponent, {
+                width: window.innerWidth < 600 ? '90%' : '50%',
+                maxWidth: '100vw',
+                data: barang // Kirim hanya barang yang sesuai
+            }).afterClosed().subscribe(result => {
+                // Refresh data jika perlu
+                if (result === 'refresh') {
+                    this.getBarangById(this.id!);
+                    this.getRiwayatBarangById(this.id!);
+                }
+            });
+        } else {
+            console.error('Barang dengan ID tersebut tidak ditemukan');
+        }
+    }
+
 
 
 }

@@ -1,1 +1,167 @@
-<p>add-barang-rusak works!</p>
+<!-- add-barang-rusak.component.html -->
+<div class="flex flex-col p-6 w-full max-h-screen overflow-auto">
+    <!-- Header -->
+    <div class="flex flex-0 items-center justify-between w-full sticky top-0 bg-white z-10 pb-2">
+        <div class="text-2xl font-extrabold tracking-tight">Edit Barang</div>
+        <button mat-icon-button (click)="onNoClick()">
+            <mat-icon [svgIcon]="'heroicons_outline:x-mark'"></mat-icon>
+        </button>
+    </div>
+
+    <!-- Divider -->
+    <div class="my-4 border-b w-full"></div>
+
+    <!-- Dialog content (scrollable) -->
+    <div class="mt-2 overflow-y-auto flex-1 w-full">
+        <!-- Barang information display -->
+        <div class="bg-gray-100 p-4 mb-6 rounded-lg w-full">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Nama Barang</div>
+                    <div class="text-base font-bold">{{ sebaranBarang?.barang || 'Tidak ada data' }}</div>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Nama Divisi</div>
+                    <div class="text-base font-bold">{{ sebaranBarang?.divisi || 'Tidak ada data' }}</div>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Stok Tersedia</div>
+                    <div class="text-base font-bold">{{ sebaranBarang?.qty_barang || 0 }}</div>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Penempatan</div>
+                    <div class="text-base font-bold">{{ sebaranBarang?.posisi_akhir || 'Tidak ada data' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form [formGroup]="BarangRusakForm" (ngSubmit)="onSubmit()" class="w-full" #formDirective="ngForm">
+            <div class="flex flex-col space-y-4">
+
+                <!-- Status (dropdown selection) -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                        formControlName="posisi_awal"
+                        required
+                    >
+                        <option value="" disabled selected>Pilih Status</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Barang rusak">Barang Rusak</option>
+                        <option value="memindahkan">Dipindahkan</option>
+                    </select>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="BarangRusakForm.get('posisi_awal')?.hasError('required') && BarangRusakForm.get('posisi_awal')?.touched">
+                        Status harus dipilih
+                    </div>
+                </div>
+
+                <!-- Conditionally Render Fields Based on Status -->
+                <ng-container *ngIf="BarangRusakForm.get('posisi_awal')?.value === 'Maintenance' || BarangRusakForm.get('posisi_awal')?.value === 'Barang rusak'">
+                    <!-- Jumlah -->
+                    <div class="w-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah*</label>
+                        <input
+                            class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            type="number"
+                            formControlName="qty_barang"
+                            required
+                            min="1"
+                            [max]="sebaranBarang?.qty_tersedia"
+                            (input)="preventInvalidChars($event)"
+                        >
+                        <div class="text-red-500 text-sm mt-1" *ngIf="BarangRusakForm.get('qty_barang')?.hasError('required') && BarangRusakForm.get('qty_barang')?.touched">
+                            Jumlah harus diisi
+                        </div>
+                        <div class="text-red-500 text-sm mt-1" *ngIf="BarangRusakForm.get('qty_barang')?.hasError('max') && BarangRusakForm.get('qty_barang')?.touched">
+                            Jumlah tidak boleh melebihi stok yang tersedia ({{ sebaranBarang?.qty_tersedia }}).
+                        </div>
+                    </div>
+
+                    <!-- Note -->
+                    <div class="w-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Catatan*</label>
+                        <textarea
+                            class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            formControlName="catatan"
+                            placeholder="Masukkan catatan"
+                            required
+                        ></textarea>
+                        <div class="text-red-500 text-sm mt-1" *ngIf="BarangRusakForm.get('catatan')?.hasError('required') && BarangRusakForm.get('catatan')?.touched">
+                            Catatan harus diisi
+                        </div>
+                    </div>
+                </ng-container>
+
+                <ng-container *ngIf="BarangRusakForm.get('posisi_awal')?.value === 'memindahkan'">
+                    <!-- Jumlah -->
+                    <div class="w-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah*</label>
+                        <input
+                            class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            type="number"
+                            formControlName="qty_barang"
+                            required
+                            min="1"
+                            [max]="sebaranBarang?.qty_tersedia"
+                            (input)="preventInvalidChars($event)"
+                        >
+                        <div class="text-red-500 text-sm mt-1" *ngIf="BarangRusakForm.get('qty_barang')?.hasError('required') && BarangRusakForm.get('qty_barang')?.touched">
+                            Jumlah harus diisi
+                        </div>
+                        <div class="text-red-500 text-sm mt-1" *ngIf="BarangRusakForm.get('qty_barang')?.hasError('max') && BarangRusakForm.get('qty_barang')?.touched">
+                            Jumlah tidak boleh melebihi stok yang tersedia ({{ sebaranBarang?.qty_tersedia }}).
+                        </div>
+                    </div>
+
+                    <!-- Posisi Akhir -->
+                    <div class="w-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Posisi Akhir*</label>
+                        <input
+                            class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            formControlName="posisi_akhir"
+                            placeholder="Posisi akhir barang"
+                            required
+                        >
+                        <div class="text-red-500 text-sm mt-1" *ngIf="BarangRusakForm.get('posisi_akhir')?.hasError('required') && BarangRusakForm.get('posisi_akhir')?.touched">
+                            Posisi akhir harus diisi
+                        </div>
+                    </div>
+
+
+                </ng-container>
+            </div>
+
+            <!-- Debugging info -->
+            <div class="text-xs text-gray-500 mt-4" *ngIf="false">
+                Form Valid: {{ BarangRusakForm.valid }}
+                <br>
+                Form Status: {{ BarangRusakForm.status }}
+                <br>
+                Form Value: {{ BarangRusakForm.value | json }}
+            </div>
+
+            <!-- Actions - Centered at the bottom of the form -->
+            <div class="flex items-center justify-center mt-8 gap-4 pt-4 pb-2 w-full">
+                <button
+                    type="button"
+                    class="px-4 py-2 rounded border border-gray-300"
+                    (click)="onNoClick()"
+                >
+                    Batal
+                </button>
+                <button
+                    type="submit"
+                    class="bg-green-600 text-white px-4 py-2 rounded"
+                    [disabled]="BarangRusakForm.invalid || isLoading"
+                >
+                    <span *ngIf="!isLoading">Simpan</span>
+                    <div *ngIf="isLoading" class="flex items-center justify-center">
+                        <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-white border-r-2"></div>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

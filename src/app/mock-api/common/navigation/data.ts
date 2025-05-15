@@ -66,6 +66,20 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link: '/dashboards/kategori',
             },
             {
+                id: 'dashboards.Penempatan',
+                title: 'Penempatan',
+                type: 'basic',
+                icon: 'heroicons_solid:home-modern',
+                link: '/dashboards/Penempatan',
+            },
+            {
+                id: 'dashboards.pengajuan',
+                title: 'Pengajuan Peminjaman',
+                type: 'basic',
+                icon: 'heroicons_solid:arrows-right-left',
+                link: '/dashboards/pengajuan',
+            },
+            {
                 id: 'dashboards.barang-rusak',
                 title: 'Barang Rusak/Maintenance',
                 type: 'basic',

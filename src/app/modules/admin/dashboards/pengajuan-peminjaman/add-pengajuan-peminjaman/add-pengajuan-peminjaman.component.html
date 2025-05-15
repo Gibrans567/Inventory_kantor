@@ -1,0 +1,174 @@
+<!-- add-pengajuan.component.html -->
+<div class="flex flex-col p-6 w-full max-h-screen overflow-auto">
+    <!-- Header -->
+    <div class="flex flex-0 items-center justify-between w-full sticky top-0 bg-white z-10 pb-2">
+        <div class="text-2xl font-extrabold tracking-tight">Tambah Pengajuan Peminjaman</div>
+        <button mat-icon-button (click)="onNoClick()">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
+
+    <!-- Divider -->
+    <div class="my-4 border-b w-full"></div>
+
+    <!-- Dialog content (scrollable) -->
+    <div class="mt-2 overflow-y-auto flex-1 w-full">
+        <!-- Barang information display -->
+        <div class="bg-gray-100 p-4 mb-6 rounded-lg w-full">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Nama Barang</div>
+                    <div class="text-base font-bold">{{ barangDetail?.nama_barang || 'Pilih barang' }}</div>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Kategori</div>
+                    <div class="text-base font-bold">{{ barangDetail?.kategori_nama || 'Tidak ada data' }}</div>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Stok Tersedia</div>
+                    <div class="text-base font-bold">{{ barangDetail?.qty_tersedia || 0 }}</div>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-gray-500">Gudang</div>
+                    <div class="text-base font-bold">{{ barangDetail?.nama_gudang || 'Tidak ada data' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form [formGroup]="pengajuanForm" (ngSubmit)="onSubmit()" class="w-full">
+            <div class="flex flex-col space-y-4">
+                <!-- Pilih Barang -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Barang*</label>
+                    <select
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                        formControlName="id_barang"
+                        required
+                        (change)="updateBarangDetail($event.target.value)"
+                    >
+                        <option value="" disabled selected>Pilih barang</option>
+                        <option *ngFor="let item of inventarisList" [value]="item.id">
+                            {{ item.nama_barang }} ({{ item.qty_tersedia }} tersedia)
+                        </option>
+                    </select>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('id_barang')?.hasError('required') && pengajuanForm.get('id_barang')?.touched">
+                        Barang harus dipilih
+                    </div>
+                </div>
+
+                <!-- Divisi -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Divisi*</label>
+                    <select
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                        formControlName="id_divisi"
+                        required
+                    >
+                        <option value="" disabled selected>Pilih divisi</option>
+                        <option *ngFor="let divisi of divisiList" [value]="divisi.id">
+                            {{ divisi.nama_divisi }}
+                        </option>
+                    </select>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('id_divisi')?.hasError('required') && pengajuanForm.get('id_divisi')?.touched">
+                        Divisi harus dipilih
+                    </div>
+                </div>
+
+                <!-- User -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pengguna*</label>
+                    <select
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                        formControlName="id_user"
+                        required
+                    >
+                        <option value="" disabled selected>Pilih pengguna</option>
+                        <option *ngFor="let user of userList" [value]="user.id">
+                            {{ user.nama }}
+                        </option>
+                    </select>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('id_user')?.hasError('required') && pengajuanForm.get('id_user')?.touched">
+                        Pengguna harus dipilih
+                    </div>
+                </div>
+
+                <!-- Quantity -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Barang*</label>
+                    <input
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        type="number"
+                        formControlName="qty_barang"
+                        required
+                        min="1"
+                        [max]="barangDetail?.qty_tersedia || 0"
+                        (input)="preventInvalidChars($event)"
+                    >
+                    <div class="text-sm text-gray-500 mt-1" *ngIf="barangDetail?.qty_tersedia">
+                        Maksimal: {{ barangDetail.qty_tersedia }}
+                    </div>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('qty_barang')?.hasError('required') && pengajuanForm.get('qty_barang')?.touched">
+                        Jumlah harus diisi
+                    </div>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('qty_barang')?.hasError('min') && pengajuanForm.get('qty_barang')?.touched">
+                        Jumlah barang minimal 1
+                    </div>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('qty_barang')?.hasError('max') && pengajuanForm.get('qty_barang')?.touched">
+                        Jumlah tidak boleh melebihi stok yang tersedia ({{ barangDetail?.qty_tersedia }})
+                    </div>
+                </div>
+
+                <!-- Posisi Akhir -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Posisi Akhir*</label>
+                    <input
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        formControlName="posisi_akhir"
+                        placeholder="Posisi akhir barang"
+                        required
+                    >
+                    <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('posisi_akhir')?.hasError('required') && pengajuanForm.get('posisi_akhir')?.touched">
+                        Posisi akhir harus diisi
+                    </div>
+                </div>
+
+                <!-- Catatan -->
+                <div class="w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Catatan*</label>
+                    <textarea
+                        class="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        rows="3"
+                        formControlName="note"
+                        placeholder="Catatan pengajuan (mis: keperluan peminjaman)"
+                        required
+                    ></textarea>
+                    <div class="text-red-500 text-sm mt-1" *ngIf="pengajuanForm.get('note')?.hasError('required') && pengajuanForm.get('note')?.touched">
+                        Catatan harus diisi
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions - Centered at the bottom of the form -->
+            <div class="flex items-center justify-center mt-8 gap-4 pt-4 pb-2 w-full">
+                <button
+                    type="button"
+                    class="px-4 py-2 rounded border border-gray-300"
+                    (click)="onNoClick()"
+                >
+                    Batal
+                </button>
+                <button
+                    type="submit"
+                    class="bg-blue-600 text-white px-4 py-2 rounded"
+                    [disabled]="pengajuanForm.invalid || isLoading"
+                >
+                    <span *ngIf="!isLoading">Submit Pengajuan</span>
+                    <div *ngIf="isLoading" class="flex items-center justify-center">
+                        <div class="animate-spin rounded-full h-5 w-5 border-t-2 border-white border-r-2"></div>
+                    </div>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

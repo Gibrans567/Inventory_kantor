@@ -1,0 +1,36 @@
+<div class="h-full w-full">
+    <div *ngIf="isLoading" class="loading-overlay">
+        <mat-spinner diameter="50" color="primary"></mat-spinner>
+    </div>
+
+    <a class="w-full" (click)="onNoClick()">
+        <mat-icon svgIcon="mat_solid:close" class="self-end"></mat-icon>
+    </a>
+
+    <div class="overflow-y-auto" style="max-height: 80vh; padding-right: 10px;">
+        <form [formGroup]="gudangForm" class="bg-card mt-2 flex flex-col overflow-hidden rounded-2xl p-8 pb-4">
+
+            <!-- Nama Gudang -->
+            <mat-form-field class="w-full mb-2" floatLabel="always">
+                <mat-label>Nama Gudang</mat-label>
+                <input matInput formControlName="nama_gudang" type="text" placeholder="Masukkan nama gudang" />
+                <mat-error *ngIf="gudangForm.get('nama_gudang')?.hasError('required')">
+                    Nama Gudang wajib diisi
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Lokasi Gudang -->
+            <mat-form-field class="w-full mb-2" floatLabel="always">
+                <mat-label>Lokasi Gudang</mat-label>
+                <input matInput formControlName="lokasi_gudang" type="text" placeholder="Masukkan lokasi gudang" />
+                <mat-error *ngIf="gudangForm.get('lokasi_gudang')?.hasError('required')">
+                    Lokasi Gudang wajib diisi
+                </mat-error>
+            </mat-form-field>
+
+            <button class="bg-green-600 text-white p-2 rounded mt-4" [disabled]="isLoading" (click)="onSubmit()">
+                {{ isLoading ? 'Menyimpan...' : 'Simpan Gudang' }}
+            </button>
+        </form>
+    </div>
+</div>

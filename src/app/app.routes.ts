@@ -90,6 +90,8 @@ export const appRoutes: Route[] = [
                 {path: 'divisi', loadChildren: () => import('app/modules/admin/dashboards/divisi/divisi.routes')},
                 {path: 'kategori', loadChildren: () => import('app/modules/admin/dashboards/kategori/kategori.routes')},
                 {path: 'barang-rusak', loadChildren: () => import('app/modules/admin/dashboards/barang-rusak/barang-rusak.routes')},
+                {path: 'pengajuan', loadChildren: () => import('app/modules/admin/dashboards/pengajuan-peminjaman/pengajuan-peminjaman.routes')},
+                {path: 'Penempatan', loadChildren: () => import('app/modules/admin/dashboards/gudang/gudang.routes')},
             ]},
 
             // Apps

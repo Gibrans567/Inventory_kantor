@@ -1,0 +1,38 @@
+<div class="h-full w-full">
+    <div *ngIf="isLoading" class="loading-overlay">
+        <mat-spinner diameter="50" color="primary"></mat-spinner>
+    </div>
+    <a class="w-full" (click)="onNoClick()">
+        <mat-icon svgIcon="mat_solid:close" class="self-end"></mat-icon>
+    </a>
+
+    <div class="overflow-y-auto" style="max-height: 80vh; padding-right: 10px;">
+        <form [formGroup]="barangStatusForm" class="bg-card mt-2 flex flex-col overflow-hidden rounded-2xl p-8 pb-4">
+
+            <!-- Status Barang -->
+            <mat-form-field class="w-full mb-2" floatLabel="always">
+                <mat-label>Status Barang</mat-label>
+                <input matInput formControlName="status" type="text" placeholder="Masukkan status barang" />
+                <mat-error *ngIf="barangStatusForm.get('status')?.hasError('required')">
+                    Status Barang wajib diisi
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Kuantitas Barang -->
+            <mat-form-field class="w-full mb-2" floatLabel="always">
+                <mat-label>Kuantitas Barang</mat-label>
+                <input matInput formControlName="qty_barang" type="number" placeholder="Masukkan kuantitas barang" />
+                <mat-error *ngIf="barangStatusForm.get('qty_barang')?.hasError('required')">
+                    Kuantitas Barang wajib diisi
+                </mat-error>
+                <mat-error *ngIf="barangStatusForm.get('qty_barang')?.hasError('min')">
+                    Kuantitas Barang tidak boleh kurang dari 0
+                </mat-error>
+            </mat-form-field>
+
+            <button class="bg-green-600 text-white p-2 rounded mt-4" (click)="onSubmit()">
+                Perbarui Status
+            </button>
+        </form>
+    </div>
+</div>
