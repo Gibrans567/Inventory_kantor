@@ -34,7 +34,9 @@ func CreateHistory(c *gin.Context) {
 func GetAllHistories(c *gin.Context) {
 	var histories []types.History
 	db := database.GetDB()
-	result := db.Find(&histories)
+
+	// Mengurutkan berdasarkan kolom created_at dari yang terbaru
+	result := db.Order("created_at DESC").Find(&histories)
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch histories"})
 		return

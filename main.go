@@ -19,11 +19,6 @@ func main() {
 	database.MigrateDB()
 	controller.InitiateScheduler()
 	
-	
-
-	// Inisialisasi router
-	
-
 	r := gin.Default()
 
 	r.Static("/storage", "./storage")

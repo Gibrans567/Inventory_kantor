@@ -60,7 +60,8 @@ func SetupRouter(r *gin.Engine){
 	{
 		sebaranBarang.POST("", controller.CreateSebaranBarang)
 		sebaranBarang.GET("", controller.GetAllSebaranBarang)
-		sebaranBarang.GET("/:id", controller.GetSebaranBarangByID)
+		sebaranBarang.GET("/sebaran/:id", controller.GetSebaranBarangByID)
+		sebaranBarang.GET("/:id", controller.GetSebaranBarangByIDBarang)
 		sebaranBarang.PUT("/Edit/:id", controller.UpdateSebaranBarang)
 		sebaranBarang.POST("/pindah", controller.MoveSebaranBarang)
 		sebaranBarang.DELETE("/:id", controller.DeleteSebaranBarang)
@@ -106,6 +107,15 @@ func SetupRouter(r *gin.Engine){
 	MultiUploadGambarRoutes.POST("/:id", controller.UpdateBarangFoto)
 	MultiUploadGambarRoutes.DELETE("/:id", controller.DeleteBarangFoto)
 	MultiUploadGambarRoutes.DELETE("/barang/:id", controller.DeleteAllBarangFotoByBarang)
+	}
+
+	pengajuan := r.Group("/pengajuan")
+	{ 
+	pengajuan.POST("", controller.CreatePengajuan)
+	pengajuan.GET("", controller.GetAllPengajuan)
+	pengajuan.GET("/:id", controller.GetPengajuanByID)
+	pengajuan.PUT("/:id", controller.UpdatePengajuan)
+	pengajuan.DELETE("/:id", controller.DeletePengajuan)
 	}
 
 	schedulerRoutes := r.Group("/scheduler")

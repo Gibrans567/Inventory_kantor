@@ -23,6 +23,7 @@ func MigrateDB() {
 		&types.JadwalDepresiasi{},
 		&types.BarangStatus{},
 		&types.BarangFoto{},
+		&types.PengajuanPeminjaman{},
     )
 	if err != nil {
 		log.Fatal("Gagal melakukan migrasi:", err)

@@ -249,6 +249,7 @@ func GetInventarisById(c *gin.Context) {
         "qty_barang":         inventaris.QtyBarang,
         "qty_terpakai":       inventaris.QtyTerpakai,
         "qty_tersedia":       inventaris.QtyTersedia,
+		"qty_rusak":          inventaris.QtyRusak,
         "harga_pembelian":    inventaris.HargaPembelian,
         "spesifikasi":        inventaris.Spesifikasi,
         "total_nilai":        inventaris.TotalNilai,
@@ -480,6 +481,7 @@ func DeleteInventaris(c *gin.Context) {
 
 	
 	// Hapus Depresiasi yang terkait dengan Inventaris
+		// Hapus Depresiasi yang terkait dengan Inventaris
 	if err := tx.Where("id_barang = ?", id).Delete(&types.Depresiasi{}).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus data depresiasi: " + err.Error()})
@@ -492,6 +494,14 @@ func DeleteInventaris(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus data sebaran barang: " + err.Error()})
 		return
 	}
+
+	// Hapus foto-foto terkait dari tabel barang_foto
+	if err := tx.Where("id_barang = ?", id).Delete(&types.BarangFoto{}).Error; err != nil {
+		tx.Rollback()
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus foto barang: " + err.Error()})
+		return
+	}
+
 	
 	// Buat catatan history sebelum menghapus
 	now := time.Now()

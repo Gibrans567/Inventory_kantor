@@ -130,8 +130,66 @@ func CreateSebaranBarang(c *gin.Context) {
 	c.JSON(http.StatusCreated, responseData)
 }
 
-// GetSebaranBarangByID - Mendapatkan SebaranBarang berdasarkan ID
 func GetSebaranBarangByID(c *gin.Context) {
+	id := c.Param("id")
+	db := database.GetDB()
+
+	var sebaranBarangs []types.SebaranBarang
+
+	// Ambil semua sebaran barang berdasarkan id_barang dan preload relasi
+	err := db.
+		Preload("Divisi").
+		Preload("Inventaris").
+		Preload("User").
+		Where("id = ?", id).
+		Find(&sebaranBarangs).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(sebaranBarangs) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No SebaranBarang found with that id_barang"})
+		return
+	}
+
+	// Struct untuk response
+	type Response struct {
+		ID           uint   `json:"id"`
+		IDBarang    uint   `json:"id_barang"`
+		NamaDivisi   string `json:"nama_divisi"`
+		NamaBarang   string `json:"nama_barang"`
+		NamaUser     string `json:"nama"`
+		QtyBarang    int    `json:"qty_barang"`
+		PosisiAwal   *string `json:"posisi_awal"`
+		PosisiAkhir  string `json:"posisi_akhir"`
+		Status       string `json:"status"`
+		CreatedAt    time.Time `json:"created_at"`
+	}
+
+	// Mapping hasil ke response
+	var responseData []Response
+	for _, sb := range sebaranBarangs {
+		res := Response{
+			ID:           sb.ID,
+			IDBarang:     sb.IdBarang,
+			NamaDivisi:   sb.Divisi.NamaDivisi,
+			NamaBarang:   sb.Inventaris.NamaBarang,
+			NamaUser:     sb.User.Name,
+			QtyBarang:    sb.QtyBarang,
+			PosisiAwal:   sb.PosisiAwal,
+			PosisiAkhir:  sb.PosisiAkhir,
+			Status:       sb.Status,
+			CreatedAt:    sb.CreatedAt,
+		}
+		responseData = append(responseData, res)
+	}
+
+	c.JSON(http.StatusOK, responseData)
+}
+
+func GetSebaranBarangByIDBarang(c *gin.Context) {
 	id := c.Param("id")
 	db := database.GetDB()
 
@@ -158,6 +216,7 @@ func GetSebaranBarangByID(c *gin.Context) {
 	// Struct untuk response
 	type Response struct {
 		ID           uint   `json:"id"`
+		IdBarang    uint   `json:"id_barang"`
 		NamaDivisi   string `json:"nama_divisi"`
 		NamaBarang   string `json:"nama_barang"`
 		NamaUser     string `json:"nama"`
@@ -173,6 +232,7 @@ func GetSebaranBarangByID(c *gin.Context) {
 	for _, sb := range sebaranBarangs {
 		res := Response{
 			ID:           sb.ID,
+			IdBarang:     sb.IdBarang,
 			NamaDivisi:   sb.Divisi.NamaDivisi,
 			NamaBarang:   sb.Inventaris.NamaBarang,
 			NamaUser:     sb.User.Name,

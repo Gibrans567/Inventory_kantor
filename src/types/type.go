@@ -30,6 +30,8 @@ type Inventaris struct {
     Spesifikasi       string    `json:"spesifikasi"`
     QtyTersedia       int       `json:"qty_tersedia"`
     QtyTerpakai       int       `json:"qty_terpakai"`
+    QtyRusak          int       `json:"qty_rusak"`
+    QtyPinjam         int       `json:"qty_pinjam"`
     TotalNilai        int       `json:"total_nilai"`
     UploadNota        string    `json:"upload_nota"`  // Menyimpan path file nota
     CreatedAt         time.Time
@@ -79,7 +81,7 @@ type Divisi struct {
 type User struct {
     ID                uint      `json:"id" gorm:"primaryKey"`
     IdDivisi          uint      `json:"id_divisi"`
-    Email             string    `json:"email" binding:"required,email"`
+    Email             string    `json:"email"`
     Password          string    `json:"password"`
     Name              string    `json:"nama_user"`
     Role              string    `json:"role"`
@@ -153,11 +155,11 @@ type DeleteAllByTimeframeRequest struct {
 
 type BarangStatus struct {
     ID               uint      `json:"id" gorm:"primaryKey"`
-    IdBarang         uint      `json:"id_barang"`
-    IdSebaranBarang  uint      `json:"id_sebaran_barang"`
-    Status           string    `json:"status"`
-    Note             string    `json:"note"`
-    QtyBarang        int       `json:"qty_barang"`
+    IdBarang         uint   `json:"id_barang" `
+	IdSebaranBarang  uint   `json:"id_sebaran_barang" `
+    Status           string `json:"status" `
+	QtyBarang        int    `json:"qty_barang" `
+    Note             string `json:"note" `
     PosisiAkhir      string    `json:"posisi_akhir"`  // Tambahkan ini
     CreatedAt        time.Time
     UpdatedAt        time.Time
@@ -165,6 +167,29 @@ type BarangStatus struct {
     SebaranBarang    SebaranBarang   `gorm:"foreignKey:IdSebaranBarang" json:"-"`
 }
 
+type PengajuanPeminjaman struct {
+    ID               uint      `json:"id" gorm:"primaryKey"`
+    NamaBarang         string    `json:"nama_barang"`
+	NamaUser           string    `json:"name"`
+	NamaDivisi         string    `json:"nama_divisi"`
+    IdBarang         uint      `json:"id_barang" `
+    IdUser           uint      `json:"id_user"`
+    IdDivisi         uint      `json:"id_divisi"`
+    IdApprover       *uint      `json:"id_approver"`
+    StatusKepemilikan string    `json:"status_kepemilikan"`
+    TanggalPengajuan time.Time `json:"tanggal_pengajuan"`
+    StatusPermohonan string    `json:"status_permohonan"`
+    StatusPengembalian string    `json:"status_pengembalian"`
+    QtyBarang        int       `json:"qty_barang" `
+    Note             string    `json:"note" `
+    PosisiAkhir      string    `json:"posisi_akhir"`  
+    CreatedAt        time.Time
+    UpdatedAt        time.Time
+    Inventaris       Inventaris `gorm:"foreignKey:IdBarang" json:"-"`
+    User             User       `gorm:"foreignKey:IdUser" json:"-"`
+    Divisi           Divisi     `gorm:"foreignKey:IdDivisi" json:"-"`  // One to Many
+    Approver         User       `gorm:"foreignKey:IdApprover" json:"-"`
+}
 
 type BarangFoto struct {
     ID               uint      `json:"id" gorm:"primaryKey"`
@@ -174,6 +199,7 @@ type BarangFoto struct {
     UpdatedAt        time.Time
     Inventaris       Inventaris `gorm:"foreignKey:IdBarang" json:"-"`  // Many to One
 }
+
 
 //audit
 
