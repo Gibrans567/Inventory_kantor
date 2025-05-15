@@ -528,6 +528,7 @@ func UpdateBarangStatus(c *gin.Context) {
 				}
 			}
 
+			// Hapus existingBarangStatus karena semua qty sudah tersedia
 			if err := db.Delete(&existingBarangStatus).Error; err != nil {
 				c.JSON(http.StatusInternalServerError, Response{
 					Status:  "error",
@@ -535,6 +536,20 @@ func UpdateBarangStatus(c *gin.Context) {
 					Data:    nil,
 				})
 				return
+			}
+
+			// **Cek dan hapus sebaranBarang jika QtyBarang <= 0**
+			if err := db.First(&sebaran, existingBarangStatus.IdSebaranBarang).Error; err == nil {
+				if sebaran.QtyBarang <= 0 {
+					if err := db.Delete(&sebaran).Error; err != nil {
+						c.JSON(http.StatusInternalServerError, Response{
+							Status:  "error",
+							Message: "Gagal menghapus data sebaran barang",
+							Data:    nil,
+						})
+						return
+					}
+				}
 			}
 
 			c.JSON(http.StatusOK, Response{
@@ -593,6 +608,21 @@ func UpdateBarangStatus(c *gin.Context) {
 					Data:    nil,
 				})
 				return
+			}
+
+			// **Cek dan hapus sebaranBarang jika QtyBarang <= 0**
+			var sebaran types.SebaranBarang
+			if err := db.First(&sebaran, existingBarangStatus.IdSebaranBarang).Error; err == nil {
+				if sebaran.QtyBarang <= 0 {
+					if err := db.Delete(&sebaran).Error; err != nil {
+						c.JSON(http.StatusInternalServerError, Response{
+							Status:  "error",
+							Message: "Gagal menghapus data sebaran barang",
+							Data:    nil,
+						})
+						return
+					}
+				}
 			}
 
 			c.JSON(http.StatusOK, Response{

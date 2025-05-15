@@ -33,7 +33,7 @@ func CreatePengajuan(c *gin.Context) {
 		return
 	}
 
-	// Ambil nama_divisi berdasarkan id_divisi dari Inventaris
+	// Ambil data Divisi
 	var divisi types.Divisi
 	if err := db.First(&divisi, inventaris.DivisiID).Error; err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -44,9 +44,20 @@ func CreatePengajuan(c *gin.Context) {
 		return
 	}
 
-	// Isi field yang tergantung data relasi
+	// Ambil data User
+	var user types.User
+	if err := db.First(&user, pengajuan.IdUser).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "error",
+			"message": "User tidak ditemukan",
+			"data":    nil,
+		})
+		return
+	}
+
+	// Isi field relasi
 	pengajuan.StatusKepemilikan = divisi.NamaDivisi
-	pengajuan.IdDivisi = inventaris.DivisiID // opsional: agar tetap konsisten
+	pengajuan.IdDivisi = inventaris.DivisiID
 	pengajuan.TanggalPengajuan = time.Now()
 
 	if pengajuan.StatusPermohonan == "" {
@@ -67,12 +78,29 @@ func CreatePengajuan(c *gin.Context) {
 		return
 	}
 
+	// Buat response lengkap
+	response := gin.H{
+		"id":                   pengajuan.ID,
+		"id_user":              pengajuan.IdUser,
+		"name":                 user.Name,
+		"id_barang":            pengajuan.IdBarang,
+		"nama_barang":          inventaris.NamaBarang,
+		"id_divisi":            pengajuan.IdDivisi,
+		"nama_divisi":          divisi.NamaDivisi,
+		"tanggal_pengajuan":    pengajuan.TanggalPengajuan,
+		"status_permohonan":    pengajuan.StatusPermohonan,
+		"status_pengembalian":  pengajuan.StatusPengembalian,
+		"status_kepemilikan":   pengajuan.StatusKepemilikan,
+		"note":           pengajuan.Note,
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
 		"status":  "success",
 		"message": "Data berhasil dibuat",
-		"data":    pengajuan,
+		"data":    response,
 	})
 }
+
 
 func GetAllPengajuan(c *gin.Context) {
 	db := database.GetDB()
@@ -91,11 +119,18 @@ func GetAllPengajuan(c *gin.Context) {
 		return
 	}
 
-	// Mengisi nama_barang, nama_user, nama_divisi secara manual dari relasi
 	for i := range pengajuan {
 		pengajuan[i].NamaBarang = pengajuan[i].Inventaris.NamaBarang
 		pengajuan[i].NamaUser = pengajuan[i].User.Name
 		pengajuan[i].NamaDivisi = pengajuan[i].Divisi.NamaDivisi
+
+		// Ambil data approver user dari db
+		var approverUser types.User
+		if err := db.First(&approverUser, pengajuan[i].IdApprover).Error; err == nil {
+			pengajuan[i].NamaApprover = approverUser.Name
+		} else {
+			pengajuan[i].NamaApprover = ""
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -104,6 +139,7 @@ func GetAllPengajuan(c *gin.Context) {
 		"data":    pengajuan,
 	})
 }
+
 
 func GetPengajuanByID(c *gin.Context) {
 	db := database.GetDB()
@@ -168,9 +204,7 @@ func UpdatePengajuan(c *gin.Context) {
 	if input.Note != "" {
 		existing.Note = input.Note
 	}
-	if input.PosisiAkhir != "" {
-		existing.PosisiAkhir = input.PosisiAkhir
-	}
+
 	if input.StatusPengembalian != "" {
 		existing.StatusPengembalian = input.StatusPengembalian
 	}

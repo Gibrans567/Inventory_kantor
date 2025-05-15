@@ -508,15 +508,12 @@ func DeleteInventaris(c *gin.Context) {
 	}
 
 	// Ambil posisi akhir dari SebaranBarang (jika ada)
-	var posisiAkhir string
-	if len(inventaris.SebaranBarang) > 0 {
-		// Misalnya, posisi akhir ada pada field PosisiAkhir di SebaranBarang
-		posisiAkhir = inventaris.SebaranBarang[len(inventaris.SebaranBarang)-1].PosisiAkhir
-	} else {
-		posisiAkhir = "Posisi tidak tersedia"
+	var gudang types.Gudang
+	if err := db.First(&gudang, inventaris.GudangID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data divisi"})
+		return
 	}
 
-	// Mulai transaksi
 	tx := db.Begin()
 
 	
@@ -547,7 +544,7 @@ func DeleteInventaris(c *gin.Context) {
 	now := time.Now()
 	historyKeterangan := fmt.Sprintf("Barang %s yang ada di %s telah dihapus oleh %s dari divisi %s sebanyak %d buah pada %s", 
 		inventaris.NamaBarang,
-		posisiAkhir, // Menambahkan posisi akhir dari SebaranBarang
+		gudang.NamaGudang, // Menambahkan posisi akhir dari SebaranBarang
 		user.Name,
 		divisi.NamaDivisi,
 		inventaris.QtyBarang,

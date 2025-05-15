@@ -176,13 +176,13 @@ type PengajuanPeminjaman struct {
     IdUser           uint      `json:"id_user"`
     IdDivisi         uint      `json:"id_divisi"`
     IdApprover       *uint      `json:"id_approver"`
+    NamaApprover    string   `json:"nama_approver"`
     StatusKepemilikan string    `json:"status_kepemilikan"`
     TanggalPengajuan time.Time `json:"tanggal_pengajuan"`
     StatusPermohonan string    `json:"status_permohonan"`
     StatusPengembalian string    `json:"status_pengembalian"`
     QtyBarang        int       `json:"qty_barang" `
     Note             string    `json:"note" `
-    PosisiAkhir      string    `json:"posisi_akhir"`  
     CreatedAt        time.Time
     UpdatedAt        time.Time
     Inventaris       Inventaris `gorm:"foreignKey:IdBarang" json:"-"`

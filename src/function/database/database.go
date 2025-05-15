@@ -6,7 +6,7 @@ import (
 	"os"
 	"log"
 
-	_ "github.com/go-sql-driver/mysql" // Import driver MySQL
+	_"github.com/go-sql-driver/mysql" // Import driver MySQL
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -59,4 +59,23 @@ func GetDB() *gorm.DB {
 		log.Fatal("Database belum terkoneksi, pastikan ConnectDB() sudah dipanggil")
 	}
 	return DB
+}
+
+func CheckMySQLVersion() {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+		DBUser, DBPassword, DBHost, DBPort, DBName)
+
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatalf("Gagal konek ke MySQL untuk cek versi: %v", err)
+	}
+	defer db.Close()
+
+	var version string
+	err = db.QueryRow("SELECT VERSION()").Scan(&version)
+	if err != nil {
+		log.Fatalf("Gagal mengambil versi MySQL: %v", err)
+	}
+
+	fmt.Println("Versi MySQL:", version)
 }

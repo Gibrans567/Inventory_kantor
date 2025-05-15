@@ -18,6 +18,7 @@ func main() {
 	database.ConnectDB()
 	database.MigrateDB()
 	controller.InitiateScheduler()
+	database.CheckMySQLVersion()
 	
 	r := gin.Default()
 
