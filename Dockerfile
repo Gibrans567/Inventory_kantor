@@ -1,22 +1,31 @@
-FROM golang:1.24
+# Gunakan base image golang untuk ARM64
+FROM --platform=linux/arm64 golang:1.24-alpine AS builder
 
-RUN apt-get update && apt-get install -y default-mysql-client curl
-
-RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar -xz -C /usr/local/bin
+RUN apk update && apk add --no-cache mysql-client curl
 
 WORKDIR /app
 
 COPY go.mod go.sum ./
-
 RUN go mod download
 
 COPY . .
+RUN go build -ldflags="-s -w" -o inventory-app main.go
 
-RUN go build -o inventory-app main.go
+# Final stage (ARM64)
+FROM --platform=linux/arm64 alpine:latest
 
-RUN chmod +x /app/entrypoint.sh
+RUN apk add --no-cache mysql-client curl
+
+WORKDIR /app
+
+COPY --from=builder /app/inventory-app .
+COPY entrypoint.sh .
+
+RUN chmod +x entrypoint.sh
 
 EXPOSE 8080
 
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["/app/inventory-app"]
+CMD ["./inventory-app"]
+
+

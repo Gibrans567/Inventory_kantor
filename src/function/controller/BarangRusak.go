@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"inventory/src/types"
 	"inventory/src/function/database"
+	"time"
 
 
 	"gorm.io/gorm"
@@ -21,6 +22,7 @@ type Response struct {
 
 func CreateBarangStatus(c *gin.Context) {
 	var barangStatus types.BarangStatus
+
 	if err := c.ShouldBindJSON(&barangStatus); err != nil {
 		c.JSON(http.StatusBadRequest, Response{
 			Status:  "error",
@@ -58,82 +60,29 @@ func CreateBarangStatus(c *gin.Context) {
 	result := db.Where("id_barang = ? AND status = ? AND note = ?",
 		barangStatus.IdBarang, barangStatus.Status, barangStatus.Note).First(&existingBarangStatus)
 
-	// Update jika data sudah ada
-	if result.Error == nil {
-		oldQty := existingBarangStatus.QtyBarang
-		newQty := oldQty + barangStatus.QtyBarang
-
-		if barangStatus.Status == "Barang rusak" || barangStatus.Status == "Maintenance" {
-			if barangStatus.QtyBarang <= 0 {
-				c.JSON(http.StatusBadRequest, Response{
-					Status:  "error",
-					Message: "Qty barang harus lebih dari 0",
-					Data:    nil,
-				})
-				return
-			}
-
-			if sebaran.QtyBarang < barangStatus.QtyBarang {
-				c.JSON(http.StatusBadRequest, Response{
-					Status:  "error",
-					Message: "Jumlah barang melebihi stok di sebaran",
-					Data:    nil,
-				})
-				return
-			}
-
-			sebaran.QtyBarang -= barangStatus.QtyBarang
-			inventaris.QtyRusak += barangStatus.QtyBarang
-
-			if err := db.Save(&sebaran).Error; err != nil {
-				c.JSON(http.StatusInternalServerError, Response{
-					Status:  "error",
-					Message: "Gagal update sebaran",
-					Data:    nil,
-				})
-				return
-			}
-		}
-
-		existingBarangStatus.QtyBarang = newQty
-		if err := db.Save(&existingBarangStatus).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, Response{
-				Status:  "error",
-				Message: "Gagal update barang status",
-				Data:    nil,
-			})
-			return
-		}
-
-		// Kurangi qty_terpakai
-		if inventaris.QtyTerpakai < barangStatus.QtyBarang {
-			c.JSON(http.StatusBadRequest, Response{
-				Status:  "error",
-				Message: "Qty terpakai lebih kecil dari jumlah yang dikurangi",
-				Data:    nil,
-			})
-			return
-		}
-		inventaris.QtyTerpakai -= barangStatus.QtyBarang
-
-		if err := db.Save(&inventaris).Error; err != nil {
-			c.JSON(http.StatusInternalServerError, Response{
-				Status:  "error",
-				Message: "Gagal update qty_terpakai di inventaris",
-				Data:    nil,
-			})
-			return
-		}
-
-		c.JSON(http.StatusOK, Response{
-			Status:  "success",
-			Message: "Barang status updated successfully",
-			Data:    existingBarangStatus,
+	var user types.User
+	if err := db.First(&user, sebaran.IdUser).Error; err != nil {
+		c.JSON(http.StatusNotFound, Response{
+			Status:  "error",
+			Message: "User tidak ditemukan",
+			Data:    nil,
 		})
 		return
 	}
 
-	// Jika record belum ada
+	var divisi types.Divisi
+	if err := db.First(&divisi, user.IdDivisi).Error; err != nil {
+		c.JSON(http.StatusNotFound, Response{
+			Status:  "error",
+			Message: "Divisi tidak ditemukan",
+			Data:    nil,
+		})
+		return
+	}
+
+	now := time.Now()
+
+	// Jika barang rusak atau maintenance, validasi qty
 	if barangStatus.Status == "Barang rusak" || barangStatus.Status == "Maintenance" {
 		if barangStatus.QtyBarang <= 0 {
 			c.JSON(http.StatusBadRequest, Response{
@@ -166,6 +115,71 @@ func CreateBarangStatus(c *gin.Context) {
 		}
 	}
 
+	// Jika record sudah ada, update
+	if result.Error == nil {
+		oldQty := existingBarangStatus.QtyBarang
+		newQty := oldQty + barangStatus.QtyBarang
+		existingBarangStatus.QtyBarang = newQty
+
+		if err := db.Save(&existingBarangStatus).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Status:  "error",
+				Message: "Gagal update barang status",
+				Data:    nil,
+			})
+			return
+		}
+
+		if inventaris.QtyTerpakai < barangStatus.QtyBarang {
+			c.JSON(http.StatusBadRequest, Response{
+				Status:  "error",
+				Message: "Qty terpakai lebih kecil dari jumlah yang dikurangi",
+				Data:    nil,
+			})
+			return
+		}
+
+		inventaris.QtyTerpakai -= barangStatus.QtyBarang
+		if err := db.Save(&inventaris).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Status:  "error",
+				Message: "Gagal update qty_terpakai di inventaris",
+				Data:    nil,
+			})
+			return
+		}
+
+		if barangStatus.Status == "Barang rusak" {
+			history := types.History{
+				Kategori: "Barang Rusak",
+				Keterangan: fmt.Sprintf(
+					"Barang %s telah dinyatakan rusak sebanyak %d oleh %s dari %s",
+					inventaris.NamaBarang,
+					barangStatus.QtyBarang,
+					user.Name,
+					divisi.NamaDivisi,
+				),
+				CreatedAt: now,
+			}
+			if err := db.Create(&history).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, Response{
+					Status:  "error",
+					Message: "Gagal menyimpan history",
+					Data:    nil,
+				})
+				return
+			}
+		}
+
+		c.JSON(http.StatusOK, Response{
+			Status:  "success",
+			Message: "Barang status updated successfully",
+			Data:    existingBarangStatus,
+		})
+		return
+	}
+
+	// Jika record belum ada
 	if err := db.Create(&barangStatus).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
 			Status:  "error",
@@ -175,7 +189,6 @@ func CreateBarangStatus(c *gin.Context) {
 		return
 	}
 
-	// Kurangi qty_terpakai
 	if inventaris.QtyTerpakai < barangStatus.QtyBarang {
 		c.JSON(http.StatusBadRequest, Response{
 			Status:  "error",
@@ -184,8 +197,8 @@ func CreateBarangStatus(c *gin.Context) {
 		})
 		return
 	}
-	inventaris.QtyTerpakai -= barangStatus.QtyBarang
 
+	inventaris.QtyTerpakai -= barangStatus.QtyBarang
 	if err := db.Save(&inventaris).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, Response{
 			Status:  "error",
@@ -195,12 +208,35 @@ func CreateBarangStatus(c *gin.Context) {
 		return
 	}
 
+	if barangStatus.Status == "Barang rusak" {
+		history := types.History{
+			Kategori: "Barang Rusak",
+			Keterangan: fmt.Sprintf(
+				"Barang %s telah dinyatakan rusak sebanyak %d oleh %s dari %s",
+				inventaris.NamaBarang,
+				barangStatus.QtyBarang,
+				user.Name,
+				divisi.NamaDivisi,
+			),
+			CreatedAt: now,
+		}
+		if err := db.Create(&history).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, Response{
+				Status:  "error",
+				Message: "Gagal menyimpan history",
+				Data:    nil,
+			})
+			return
+		}
+	}
+
 	c.JSON(http.StatusCreated, Response{
 		Status:  "success",
 		Message: "Barang status created successfully",
 		Data:    barangStatus,
 	})
 }
+
 
 func GetBarangStatus(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
@@ -365,7 +401,6 @@ func GetBarangStatusBySebaran(c *gin.Context) {
 func UpdateBarangStatus(c *gin.Context) {
 	id := c.Param("id")
 
-	// Parse ID
 	barangStatusID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, Response{
@@ -378,7 +413,6 @@ func UpdateBarangStatus(c *gin.Context) {
 
 	db := database.GetDB()
 
-	// Ambil data status barang yang ada
 	var existingBarangStatus types.BarangStatus
 	if err := db.First(&existingBarangStatus, barangStatusID).Error; err != nil {
 		c.JSON(http.StatusNotFound, Response{
@@ -389,7 +423,6 @@ func UpdateBarangStatus(c *gin.Context) {
 		return
 	}
 
-	// Validasi jika qty_barang yang diinput lebih besar dari qty_barang yang ada
 	var updatedBarangStatus types.BarangStatus
 	if err := c.ShouldBindJSON(&updatedBarangStatus); err != nil {
 		c.JSON(http.StatusBadRequest, Response{
@@ -400,7 +433,6 @@ func UpdateBarangStatus(c *gin.Context) {
 		return
 	}
 
-	// Validasi agar qty_barang yang diinputkan tidak lebih besar dari qty_barang yang ada
 	if updatedBarangStatus.QtyBarang > existingBarangStatus.QtyBarang {
 		c.JSON(http.StatusBadRequest, Response{
 			Status:  "error",
@@ -410,7 +442,6 @@ func UpdateBarangStatus(c *gin.Context) {
 		return
 	}
 
-	// Ambil data inventaris
 	var inventaris types.Inventaris
 	if err := db.First(&inventaris, existingBarangStatus.IdBarang).Error; err != nil {
 		c.JSON(http.StatusNotFound, Response{
@@ -423,7 +454,6 @@ func UpdateBarangStatus(c *gin.Context) {
 
 	oldStatus := existingBarangStatus.Status
 
-	// STATUS BERUBAH DARI RUSAK/MAINTENANCE KE TERSEDIA
 	isStatusBecomingAvailable := updatedBarangStatus.Status == "Tersedia" ||
 		updatedBarangStatus.Status == "Sudah fix" ||
 		updatedBarangStatus.Status == "Sudah bisa digunakan" ||
@@ -432,10 +462,8 @@ func UpdateBarangStatus(c *gin.Context) {
 	wasUnavailableStatus := oldStatus == "Barang rusak" || oldStatus == "Maintenance"
 
 	if wasUnavailableStatus && isStatusBecomingAvailable {
-		// Tambahkan jumlah yang tersedia sesuai dengan qty yang diupdate
 		inventaris.QtyTersedia += updatedBarangStatus.QtyBarang
 
-		// Kurangi qty_rusak
 		if inventaris.QtyRusak >= updatedBarangStatus.QtyBarang {
 			inventaris.QtyRusak -= updatedBarangStatus.QtyBarang
 		} else {
@@ -451,10 +479,7 @@ func UpdateBarangStatus(c *gin.Context) {
 			return
 		}
 
-		// PERBAIKAN: Cek apakah semua barang atau hanya sebagian yang diupdate
 		if updatedBarangStatus.QtyBarang < existingBarangStatus.QtyBarang {
-			// Hanya sebagian barang yang diupdate ke status tersedia
-			// Kurangi jumlah di record yang ada
 			remainingQty := existingBarangStatus.QtyBarang - updatedBarangStatus.QtyBarang
 			existingBarangStatus.QtyBarang = remainingQty
 
@@ -469,13 +494,40 @@ func UpdateBarangStatus(c *gin.Context) {
 
 			c.JSON(http.StatusOK, Response{
 				Status:  "success",
-				Message: fmt.Sprintf("%d item berhasil diubah menjadi tersedia, %d item masih dengan status %s", 
-				          updatedBarangStatus.QtyBarang, remainingQty, oldStatus),
-				Data:    existingBarangStatus,
+				Message: fmt.Sprintf("%d item berhasil diubah menjadi tersedia, %d item masih dengan status %s",
+					updatedBarangStatus.QtyBarang, remainingQty, oldStatus),
+				Data: existingBarangStatus,
 			})
 			return
 		} else {
-			// Semua barang diupdate ke status tersedia, hapus record
+			// History: Catat siapa yang memperbaiki atau service
+			var sebaran types.SebaranBarang
+			if err := db.First(&sebaran, existingBarangStatus.IdSebaranBarang).Error; err == nil {
+				var user types.User
+				if err := db.First(&user, sebaran.IdUser).Error; err == nil {
+					var divisi types.Divisi
+					if err := db.First(&divisi, user.IdDivisi).Error; err == nil {
+						var history types.History
+						if oldStatus == "Barang rusak" {
+							history = types.History{
+								Kategori:   "Barang Diperbaiki",
+								Keterangan: fmt.Sprintf("Barang %s telah diperbaiki dan siap digunakan oleh %s dari %s", inventaris.NamaBarang, user.Name, divisi.NamaDivisi),
+								CreatedAt:  time.Now(),
+							}
+						} else if oldStatus == "Maintenance" {
+							history = types.History{
+								Kategori:   "Barang Selesai Service",
+								Keterangan: fmt.Sprintf("Barang %s telah selesai di service oleh %s dari %s", inventaris.NamaBarang, user.Name, divisi.NamaDivisi),
+								CreatedAt:  time.Now(),
+							}
+						}
+						if history.Kategori != "" {
+							_ = db.Create(&history)
+						}
+					}
+				}
+			}
+
 			if err := db.Delete(&existingBarangStatus).Error; err != nil {
 				c.JSON(http.StatusInternalServerError, Response{
 					Status:  "error",
@@ -494,12 +546,10 @@ func UpdateBarangStatus(c *gin.Context) {
 		}
 	}
 
-	// STATUS SUDAH TERSEDIA TAPI QTY BERUBAH
 	if isStatusBecomingAvailable && updatedBarangStatus.QtyBarang != existingBarangStatus.QtyBarang {
 		qtyDiff := updatedBarangStatus.QtyBarang - existingBarangStatus.QtyBarang
 		inventaris.QtyTersedia += qtyDiff
 
-		// Kurangi qty_rusak sesuai dengan qty yang diupdate
 		if inventaris.QtyRusak >= updatedBarangStatus.QtyBarang {
 			inventaris.QtyRusak -= updatedBarangStatus.QtyBarang
 		} else {
@@ -515,9 +565,7 @@ func UpdateBarangStatus(c *gin.Context) {
 			return
 		}
 
-		// PERBAIKAN: Cek apakah semua barang atau hanya sebagian yang diupdate
 		if updatedBarangStatus.QtyBarang < existingBarangStatus.QtyBarang {
-			// Hanya sebagian barang yang diupdate
 			remainingQty := existingBarangStatus.QtyBarang - updatedBarangStatus.QtyBarang
 			existingBarangStatus.QtyBarang = remainingQty
 
@@ -532,13 +580,12 @@ func UpdateBarangStatus(c *gin.Context) {
 
 			c.JSON(http.StatusOK, Response{
 				Status:  "success",
-				Message: fmt.Sprintf("%d item berhasil diubah menjadi tersedia, %d item masih dengan status %s", 
-				          updatedBarangStatus.QtyBarang, remainingQty, oldStatus),
-				Data:    existingBarangStatus,
+				Message: fmt.Sprintf("%d item berhasil diubah menjadi tersedia, %d item masih dengan status %s",
+					updatedBarangStatus.QtyBarang, remainingQty, oldStatus),
+				Data: existingBarangStatus,
 			})
 			return
 		} else {
-			// Semua barang diupdate, hapus record
 			if err := db.Delete(&existingBarangStatus).Error; err != nil {
 				c.JSON(http.StatusInternalServerError, Response{
 					Status:  "error",
@@ -557,12 +604,10 @@ func UpdateBarangStatus(c *gin.Context) {
 		}
 	}
 
-	// UPDATE STATUS BIASA (NON TERSEDIA)
 	if !isStatusBecomingAvailable {
 		existingBarangStatus.Status = updatedBarangStatus.Status
 		existingBarangStatus.QtyBarang = updatedBarangStatus.QtyBarang
 
-		// Tetap gunakan nilai lama jika Note/PosisiAkhir tidak dikirim
 		if updatedBarangStatus.Note != "" {
 			existingBarangStatus.Note = updatedBarangStatus.Note
 		}
@@ -586,6 +631,7 @@ func UpdateBarangStatus(c *gin.Context) {
 		})
 	}
 }
+
 
 func DeleteBarangStatus(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)

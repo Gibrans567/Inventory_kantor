@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 until mysql -h db -u root -p"$MYSQL_PASSWORD" -e "show databases" > /dev/null 2>&1; do
     echo "Waiting for database to be ready..."
