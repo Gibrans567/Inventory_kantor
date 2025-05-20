@@ -140,13 +140,14 @@ func SetupRouter(r *gin.Engine){
 	{
 		auth.POST("/login", middleware.LoginHandler)
 		auth.POST("/register", middleware.RegisterHandler)
+		auth.POST("/logout", middleware.LogoutHandler)
 	}
 
 	// Protected route
-	api := r.Group("/api")
-	api.Use(middleware.AuthMiddleware())
-	{
-		api.POST("/pegawai", middleware.RequireRole("pegawai"), middleware.LogoutHandler)
-	}
+	// api := r.Group("/api")
+	// api.Use(middleware.AuthMiddleware())
+	// {
+	// 	api.POST("/pegawai", middleware.RequireRole("pegawai"), middleware.LogoutHandler)
+	// }
 
 }

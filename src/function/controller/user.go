@@ -5,6 +5,8 @@ import (
 	"inventory/src/function/database"
 	"github.com/gin-gonic/gin"
 	"net/http"
+
+
 )
 
 // CreateUser - Menambahkan User baru
@@ -55,7 +57,6 @@ func GetAllUsers(c *gin.Context) {
     c.JSON(http.StatusOK, users)
 }
 
-
 // UpdateUser - Mengupdate data User
 func UpdateUser(c *gin.Context) {
 	id := c.Param("id")
@@ -88,3 +89,4 @@ func DeleteUser(c *gin.Context) {
 
 	c.JSON(http.StatusNoContent, gin.H{"message": "Deleted successfully"})
 }
+

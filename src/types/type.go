@@ -85,6 +85,7 @@ type User struct {
     Password          string    `json:"password"`
     Name              string    `json:"nama_user"`
     Role              string    `json:"role"`
+    Token             string    `json:"token"`
     CreatedAt         time.Time
     UpdatedAt         time.Time
     Divisi            Divisi     `gorm:"foreignKey:IdDivisi" json:"-"`  // Many to One

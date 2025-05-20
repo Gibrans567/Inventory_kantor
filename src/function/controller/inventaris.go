@@ -188,9 +188,6 @@ func CreateInventaris(c *gin.Context) {
     })
 }
 
-
-
-
 // GetAllInventaris - Mendapatkan semua data Inventaris
 func GetAllInventaris(c *gin.Context) {
     var inventaris []types.Inventaris
@@ -287,6 +284,7 @@ func GetInventarisById(c *gin.Context) {
         "nama_divisi":        inventaris.Divisi.NamaDivisi,     // Nama Divisi
         "nama_barang":        inventaris.NamaBarang,
         "qty_barang":         inventaris.QtyBarang,
+        "qty_pinjam":         inventaris.QtyPinjam,
         "qty_terpakai":       inventaris.QtyTerpakai,
         "qty_tersedia":       inventaris.QtyTersedia,
 		"qty_rusak":          inventaris.QtyRusak,

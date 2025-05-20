@@ -189,31 +189,90 @@ func UpdatePengajuan(c *gin.Context) {
 		return
 	}
 
-	// Langsung update id_approver dan status_permohonan
+	// Mulai transaksi database
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Cek jika status_permohonan berubah menjadi "Disetujui"
+	if input.StatusPermohonan == "Disetujui" && existing.StatusPermohonan != "Disetujui" {
+		// Ambil data inventaris berdasarkan id (id inventaris = id_barang pengajuan)
+		var inventaris types.Inventaris
+		if err := tx.Where("id = ?", existing.IdBarang).First(&inventaris).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusNotFound, gin.H{
+				"status":  "error",
+				"message": "Data inventaris tidak ditemukan",
+				"data":    nil,
+			})
+			return
+		}
+
+		// Validasi apakah qty_tersedia cukup
+		if inventaris.QtyTersedia < existing.QtyBarang {
+			tx.Rollback()
+			c.JSON(http.StatusBadRequest, gin.H{
+				"status":  "error",
+				"message": "Stok tersedia tidak mencukupi",
+				"data":    nil,
+			})
+			return
+		}
+
+		// Update inventaris: kurangi qty_tersedia dan tambah qty_pinjam
+		newQtyTersedia := inventaris.QtyTersedia - existing.QtyBarang
+		newQtyPinjam := inventaris.QtyPinjam + existing.QtyBarang
+
+		if err := tx.Model(&inventaris).Updates(map[string]interface{}{
+			"qty_tersedia": newQtyTersedia,
+			"qty_pinjam":   newQtyPinjam,
+		}).Error; err != nil {
+			tx.Rollback()
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"status":  "error",
+				"message": "Gagal update inventaris",
+				"data":    nil,
+			})
+			return
+		}
+	}
+
+	// Update field lainnya
 	if input.IdApprover != nil {
 		existing.IdApprover = input.IdApprover
 	}
 	if input.StatusPermohonan != "" {
 		existing.StatusPermohonan = input.StatusPermohonan
 	}
-
-	// Update field lainnya jika ada perubahan
 	if input.QtyBarang != 0 {
 		existing.QtyBarang = input.QtyBarang
 	}
 	if input.Note != "" {
 		existing.Note = input.Note
 	}
-
 	if input.StatusPengembalian != "" {
 		existing.StatusPengembalian = input.StatusPengembalian
 	}
 
-	// Simpan perubahan
-	if err := db.Save(&existing).Error; err != nil {
+	// Simpan perubahan pengajuan
+	if err := tx.Save(&existing).Error; err != nil {
+		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status":  "error",
-			"message": "Gagal update data",
+			"message": "Gagal update data pengajuan",
+			"data":    nil,
+		})
+		return
+	}
+
+	// Commit transaksi
+	if err := tx.Commit().Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status":  "error",
+			"message": "Gagal menyimpan perubahan",
 			"data":    nil,
 		})
 		return

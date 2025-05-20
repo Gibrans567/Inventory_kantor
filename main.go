@@ -18,18 +18,16 @@ func main() {
 	database.ConnectDB()
 	database.MigrateDB()
 	controller.InitiateScheduler()
-	database.CheckMySQLVersion()
 	
 	r := gin.Default()
 
 	r.Static("/storage", "./storage")
 	// Pasang middleware CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:4200"},
+		AllowOrigins:     []string{"*"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}))
 
@@ -37,5 +35,5 @@ func main() {
 	routes.SetupRouter(r)
 
 	// Jalankan server
-	r.Run(":8080")
+	r.Run(":8081")
 }

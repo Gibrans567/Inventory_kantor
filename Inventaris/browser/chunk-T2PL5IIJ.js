@@ -1,0 +1,1 @@
+import{qa as a}from"./chunk-ULGM77ZI.js";var p=(()=>{class r{transform(i,t,n){return Array.isArray(i)?i.map(e=>n.find(s=>s[t]===e)):n.find(e=>e[t]===i)}static{this.\u0275fac=function(t){return new(t||r)}}static{this.\u0275pipe=a({name:"fuseFindByKey",type:r,pure:!1,standalone:!0})}}return r})();export{p as a};
