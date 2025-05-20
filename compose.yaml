@@ -1,6 +1,6 @@
 version: "3.9"
 services:
-  db:
+  db-invent:
     image: mysql:8
     restart: always
     environment:
@@ -19,13 +19,13 @@ services:
       - inventory-network
 
 
-  app:
+  app-invent:
     build: .
     depends_on:
-      - db
+      - db-invent
       
     environment:
-      DB_HOST: db
+      DB_HOST: db-invent
       DB_PORT: "3306"
       DB_USER: root
       DB_PASSWORD: secret123
@@ -36,7 +36,7 @@ services:
       - inventory-network
 
 
-  nginx:
+  nginx-invent:
     image: nginx:alpine
     container_name: frontend
     ports:
