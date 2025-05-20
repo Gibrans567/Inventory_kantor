@@ -10,7 +10,7 @@ import { LayoutComponent } from 'app/layout/layout.component';
 export const appRoutes: Route[] = [
 
     // Redirect empty path to '/dashboards/project'
-    {path: '', pathMatch : 'full', redirectTo: 'dashboards/project'},
+    {path: '', pathMatch : 'full', redirectTo: 'dashboards/inventaris'},
 
     // Redirect signed-in user to the '/dashboards/project'
     //
@@ -92,6 +92,7 @@ export const appRoutes: Route[] = [
                 {path: 'barang-rusak', loadChildren: () => import('app/modules/admin/dashboards/barang-rusak/barang-rusak.routes')},
                 {path: 'pengajuan', loadChildren: () => import('app/modules/admin/dashboards/pengajuan-peminjaman/pengajuan-peminjaman.routes')},
                 {path: 'Penempatan', loadChildren: () => import('app/modules/admin/dashboards/gudang/gudang.routes')},
+                {path: 'anggota-list', loadChildren: () => import('app/modules/admin/dashboards/anggota-list/anggota-list.routes')},
             ]},
 
             // Apps

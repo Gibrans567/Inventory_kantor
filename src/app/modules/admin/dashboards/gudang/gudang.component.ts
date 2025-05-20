@@ -67,7 +67,7 @@ export class GudangComponent {
     this.isNotDataFound = false;
 
     try {
-      const response = await this.apiService.get(`/gudang`);
+      const response = await this.apiService.get(`/gudang`,true);
 
       const gudangData = response ?? [];
 
@@ -141,7 +141,7 @@ export class GudangComponent {
     confirm.afterClosed().subscribe(async (result) => {
       if (result === 'confirmed') {
         try {
-          await this.apiService.delete(`/gudang/${id}`);
+          await this.apiService.delete(`/gudang/${id}`,true);
           this.getGudang();
           console.log(`Gudang dengan ID ${id} berhasil dihapus`);
         } catch (error) {

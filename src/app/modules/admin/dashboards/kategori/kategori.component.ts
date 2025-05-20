@@ -65,7 +65,7 @@ export class KategoriComponent {
       this.isNotDataFound = false;
 
       try {
-        const response = await this.apiService.get(`/kategori`);
+        const response = await this.apiService.get(`/kategori`,true);
 
         // Memastikan response berhasil dan mengakses data kategori
         const kategoriData = response?.data ?? [];  // Mengakses 'data' dari response
@@ -153,7 +153,7 @@ export class KategoriComponent {
         if (result === 'confirmed') {
           try {
             // Panggil API untuk menghapus kategori berdasarkan nama
-            await this.apiService.delete(`/kategori/${namaKategori}`);
+            await this.apiService.delete(`/kategori/${namaKategori}`,true);
 
             // Mengambil data kategori terbaru setelah penghapusan
             this.getKategori(); // Memanggil fungsi untuk memperbarui data kategori dengan data terbaru

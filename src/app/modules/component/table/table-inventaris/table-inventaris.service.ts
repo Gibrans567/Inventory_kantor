@@ -14,7 +14,7 @@ export class InventoryService {
 
     fetchData(): void {
         this.isLoading.set(true)
-        this._apiService.get("/inventaris")
+        this._apiService.get("/inventaris",true)
             .then(response => {
                 this.isLoading.set(false)
                 this.isNotFound.set(false)

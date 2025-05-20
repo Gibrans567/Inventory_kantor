@@ -74,7 +74,7 @@ export class AddBarangRusakComponent implements OnInit {
     // Get list of Divisi
     async getDivisiList() {
       try {
-        const res = await this._apiService.get('/divisi');
+        const res = await this._apiService.get('/divisi',true);
         this.divisiList = res.data || []; // Assuming response has a 'data' field
       } catch (error) {
         console.error('Failed to fetch divisi data', error);
@@ -85,7 +85,7 @@ export class AddBarangRusakComponent implements OnInit {
     // Get list of Users
     async getUserList() {
    try {
-        const res = await this._apiService.get('/user');
+        const res = await this._apiService.get('/user',true);
         console.log('API response:', res);
 
         // Check if response is an array or has a data property
@@ -148,7 +148,7 @@ export class AddBarangRusakComponent implements OnInit {
                     const formData = {
                         id_barang: this.sebaranBarang.id_barang,
                         id_sebaran_barang: this.sebaranBarang.id,
-                        status: status, 
+                        status: status,
                         note: catatanValue,
                         qty_barang: qtyBarang,
                         posisi_akhir: this.sebaranBarang.posisi_akhir,

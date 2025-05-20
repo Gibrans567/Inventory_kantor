@@ -65,7 +65,7 @@ export class PengajuanPeminjamanComponent {
     async getPengajuanData() {
         try {
             this.isLoading = true;
-            const response = await this._apiService.get('/pengajuan');
+            const response = await this._apiService.get('/pengajuan',true);
 
             if (response.status === 'success' && response.data) {
                 this.pengajuanData = response.data.map(item => ({
@@ -144,7 +144,7 @@ export class PengajuanPeminjamanComponent {
           if (result === 'confirmed') {
             try {
               // Hapus data pengajuan
-              await this._apiService.delete(`/pengajuan/${pengajuan.id}`);
+              await this._apiService.delete(`/pengajuan/${pengajuan.id}`,true);
 
               // Refresh data
               this.getPengajuanData();

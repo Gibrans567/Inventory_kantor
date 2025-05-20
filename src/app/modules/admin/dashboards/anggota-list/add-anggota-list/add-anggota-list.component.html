@@ -1,0 +1,76 @@
+<div class="h-full w-full">
+    <div *ngIf="isLoading" class="loading-overlay flex justify-center items-center absolute inset-0 bg-white bg-opacity-60 z-50">
+        <mat-spinner diameter="50" color="primary"></mat-spinner>
+    </div>
+
+    <a class="w-full flex justify-end p-2" (click)="onNoClick()">
+        <mat-icon svgIcon="mat_solid:close"></mat-icon>
+    </a>
+
+    <div class="overflow-y-auto" style="max-height: 80vh; padding-right: 10px;">
+        <form [formGroup]="userForm" class="bg-card mt-2 flex flex-col overflow-hidden rounded-2xl p-8 pb-4">
+
+            <!-- Nama User -->
+            <mat-form-field class="w-full mb-4" floatLabel="always">
+                <mat-label>Nama User</mat-label>
+                <input matInput formControlName="nama_user" type="text" placeholder="Masukkan nama user" />
+                <mat-error *ngIf="userForm.get('nama_user')?.hasError('required')">
+                    Nama user wajib diisi
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Email -->
+            <mat-form-field class="w-full mb-4" floatLabel="always">
+                <mat-label>Email</mat-label>
+                <input matInput formControlName="email" type="email" placeholder="Masukkan email" />
+                <mat-error *ngIf="userForm.get('email')?.hasError('required')">
+                    Email wajib diisi
+                </mat-error>
+                <mat-error *ngIf="userForm.get('email')?.hasError('email')">
+                    Format email tidak valid
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Password -->
+            <mat-form-field class="w-full mb-4" floatLabel="always">
+                <mat-label>Password</mat-label>
+                <input matInput formControlName="password" type="password" placeholder="Masukkan password" />
+                <mat-error *ngIf="userForm.get('password')?.hasError('required')">
+                    Password wajib diisi
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Divisi -->
+            <mat-form-field class="w-full mb-4" floatLabel="always">
+                <mat-label>Divisi</mat-label>
+                <mat-select formControlName="id_divisi">
+                    <mat-option *ngFor="let divisi of divisiList" [value]="divisi.id">
+                        {{ divisi.nama_divisi }}
+                    </mat-option>
+                </mat-select>
+                <mat-error *ngIf="userForm.get('id_divisi')?.hasError('required')">
+                    Divisi wajib dipilih
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Role -->
+            <mat-form-field class="w-full mb-4" floatLabel="always">
+                <mat-label>Role</mat-label>
+                <mat-select formControlName="role">
+                    <mat-option value="Pegawai">Pegawai</mat-option>
+                    <mat-option value="Admin">Admin</mat-option>
+                    <mat-option value="Manager">Manager</mat-option>
+                </mat-select>
+                <mat-error *ngIf="userForm.get('role')?.hasError('required')">
+                    Role wajib dipilih
+                </mat-error>
+            </mat-form-field>
+
+            <!-- Submit Button -->
+            <button class="bg-green-600 text-white p-2 rounded mt-4" (click)="onSubmit()" [disabled]="isLoading || userForm.invalid">
+                Simpan Anggota
+            </button>
+
+        </form>
+    </div>
+</div>

@@ -52,6 +52,13 @@ export const defaultNavigation: FuseNavigationItem[] = [
                 link: '/dashboards/history',
             },
             {
+                id: 'dashboards.anggota-list',
+                title: 'Anggota List',
+                type: 'basic',
+                icon: 'heroicons_solid:user',
+                link: '/dashboards/anggota-list',
+            },
+            {
                 id: 'dashboards.divisi',
                 title: 'Divisi',
                 type: 'basic',

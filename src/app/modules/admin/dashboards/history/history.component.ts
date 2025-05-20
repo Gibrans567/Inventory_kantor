@@ -42,10 +42,10 @@ export class HistoryComponent implements OnInit {
   isNotDataFound: boolean = false;
 
   logAktivitas: any[] = []; // Hold fetched data
-  
-  
+
+
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort; 
+  @ViewChild(MatSort) sort!: MatSort;
 
 
   constructor(
@@ -58,16 +58,16 @@ export class HistoryComponent implements OnInit {
       this.getHistory();
     });
   }
-  
+
 
   async getHistory(): Promise<void> {
     this.isLoading = true;
     this.isNotDataFound = false;
-  
+
     try {
-      const response = await this._apiService.get(`/histories`);
+      const response = await this._apiService.get(`/histories`,true);
       this.logAktivitas = Array.isArray(response) ? response : [];
-  
+
       this.dataSource.data = this.logAktivitas;
       this.isNotDataFound = this.logAktivitas.length === 0;
     } catch (error) {
@@ -77,12 +77,12 @@ export class HistoryComponent implements OnInit {
       this.isLoading = false;
     }
   }
-  
+
 
   ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
-  
+
     // Custom filter: hanya berdasarkan kategori dan keterangan
     this.dataSource.filterPredicate = (data: any, filter: string) => {
       const transformedFilter = filter.trim().toLowerCase();
@@ -92,7 +92,7 @@ export class HistoryComponent implements OnInit {
       );
     };
   }
-   
+
 
   // This method will trigger when the page is changed
   onPageChange(event: any): void {
@@ -101,12 +101,12 @@ export class HistoryComponent implements OnInit {
 
   applySearchFilter(search: string): void {
     this.dataSource.filter = search.trim().toLowerCase();
-  
+
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
   }
-  
+
 
   applyFilterUserProfile(): void {
     // Add logic for filtering user profiles (if needed)

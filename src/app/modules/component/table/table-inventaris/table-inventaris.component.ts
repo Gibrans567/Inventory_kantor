@@ -103,7 +103,7 @@ export class TableInventarisComponent implements OnInit{
 
           async getdivisi() {
             try {
-              const divisiItem = await this.apiService.get('/divisi');
+              const divisiItem = await this.apiService.get('/divisi',true);
 
               // Create a Set to track unique division names
               const uniqueDivisiNames = new Set<string>();
@@ -286,7 +286,7 @@ export class TableInventarisComponent implements OnInit{
                 try {
                   // Panggil API untuk menghapus divisi yang dipilih
                   for (let item of divisiToDelete) {
-                    await this.apiService.delete(`/divisi/${item.name}`);
+                    await this.apiService.delete(`/divisi/${item.name}`,true);
                   }
 
                   // Menghapus divisi yang dipilih dari array divisiItems
@@ -330,7 +330,7 @@ export class TableInventarisComponent implements OnInit{
                 if (result === 'confirmed') {
                     try {
                         // Lakukan penghapusan
-                        const response = await this.apiService.delete(`/inventaris/${inventarisId}`);
+                        const response = await this.apiService.delete(`/inventaris/${inventarisId}`,true);
                         console.log('Inventaris berhasil dihapus:', response);
 
                         // Refresh data setelah penghapusan

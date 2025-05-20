@@ -91,7 +91,7 @@ export class AddInventarisComponent {
     }
 
     async getRole() {
-        const roleData = await this._apiService.get('/api/mikrotik/get-profiles')
+        const roleData = await this._apiService.get('/api/mikrotik/get-profiles',true)
         this.inventarisDatas = roleData.profiles
     }
 
@@ -176,7 +176,7 @@ export class AddInventarisComponent {
 
     async getGudangList() {
         try {
-            const res = await this._apiService.get('/gudang');
+            const res = await this._apiService.get('/gudang',true);
             this.gudangList = res; // sesuaikan struktur response kalau beda
         } catch (error) {
             console.error('Gagal ambil data gudang', error);
@@ -185,7 +185,7 @@ export class AddInventarisComponent {
 
     async getKategoriList() {
         try {
-            const res = await this._apiService.get('/kategori');
+            const res = await this._apiService.get('/kategori',true);
             this.kategoriList = res.data;
         } catch (error) {
             console.error('Gagal ambil data kategori', error);
@@ -194,7 +194,7 @@ export class AddInventarisComponent {
 
     async getDivisiList() {
         try {
-            const res = await this._apiService.get('/divisi');
+            const res = await this._apiService.get('/divisi',true);
             this.divisiList = res.data;
         } catch (error) {
             console.error('Gagal ambil data divisi', error);
@@ -203,7 +203,7 @@ export class AddInventarisComponent {
 
     async getUserList() {
         try {
-            const res = await this._apiService.get('/user');
+            const res = await this._apiService.get('/user',true);
             this.userList = res;
         } catch (error) {
             console.error('Gagal ambil data user', error);

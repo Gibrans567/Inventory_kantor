@@ -80,7 +80,7 @@ export class DetailInventarisComponent {
     async getBarangById(id: string) {
         try {
             // Fetch data from the API
-            const barangData = await this._apiService.get(`/inventaris/barang/${id}`);
+            const barangData = await this._apiService.get(`/inventaris/barang/${id}`,true);
             console.log(barangData);
 
             // Mapping API data to output format
@@ -91,6 +91,7 @@ export class DetailInventarisComponent {
                 harga_pembelian: barangData.harga_pembelian || 'Memuat Data....',
                 qty_barang: barangData.qty_barang || 'Memuat Data....',
                 qty_tersedia: barangData.qty_tersedia || 'Barang Sudah Terpakai Semua',
+                qty_pinjam: barangData.qty_pinjam || 'Tidak Ada Barang Yang Dipinjam',
                 qty_terpakai: barangData.qty_terpakai || 'Tidak Ada Barang Yang Terpakai',
                 qty_rusak: barangData.qty_rusak || 'Tidak Ada Barang Yang Rusak',
                 kategori_nama: barangData.kategori_nama || 'Memuat Data....',
@@ -116,6 +117,7 @@ export class DetailInventarisComponent {
                 qty_barang: 'Memuat Data....',
                 qty_tersedia: 'Memuat Data....',
                 qty_terpakai: 'Memuat Data....',
+                qty_pinjam: 'Memuat Data....',
                 qty_rusak: 'Memuat Data....',
                 kategori_nama: 'Memuat Data....',
                 nama_divisi: 'Memuat Data....',
@@ -135,7 +137,7 @@ export class DetailInventarisComponent {
 
     async getRiwayatBarangById(id: string) {
         try {
-            const riwayatData = await this._apiService.get(`/sebaranBarang/${id}`);
+            const riwayatData = await this._apiService.get(`/sebaranBarang/${id}`,true);
             this.sebaranBarang = riwayatData.map(item => ({
                 id: item.id || 'Belum Ada Barang',
                 id_barang: item.id_barang || 'Belum Ada Barang',
@@ -162,7 +164,7 @@ export class DetailInventarisComponent {
 
     async getRiwayatBarangByIdSebaran(id: string) {
         try {
-            const riwayatData = await this._apiService.get(`/sebaranBarang/sebaran/${id}`);
+            const riwayatData = await this._apiService.get(`/sebaranBarang/sebaran/${id}`,true);
             this.sebaranBarang = riwayatData.map(item => ({
                 id: item.id || 'Belum Ada Barang',
                 barang: item.nama_barang || 'Belum Ada Barang',
@@ -264,7 +266,7 @@ export class DetailInventarisComponent {
           if (result === 'confirmed') {
             try {
               // Hapus data sebaran barang
-              await this._apiService.delete(`/sebaranBarang/${sebaran.id}`);
+              await this._apiService.delete(`/sebaranBarang/${sebaran.id}`,true);
 
               // Ambil ulang riwayat sebaran berdasarkan ID barang utama
               if (this.id) {

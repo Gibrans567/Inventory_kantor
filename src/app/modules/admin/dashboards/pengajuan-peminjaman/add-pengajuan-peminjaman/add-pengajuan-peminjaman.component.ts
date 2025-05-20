@@ -77,7 +77,7 @@ export class AddPengajuanPeminjamanComponent implements OnInit {
   // Get list of Users
   async getUserList() {
     try {
-      const res = await this._apiService.get('/user');
+      const res = await this._apiService.get('/user',true);
       this.userList = res || [];
     } catch (error) {
       console.error('Failed to fetch user data', error);
@@ -89,7 +89,7 @@ export class AddPengajuanPeminjamanComponent implements OnInit {
   async getInventarisList() {
     try {
       this.isLoading = true;
-      const res = await this._apiService.get('/inventaris');
+      const res = await this._apiService.get('/inventaris',true);
       console.log('Raw inventaris response:', res);
       this.inventarisList = res.data || [];
       console.log('Processed inventarisList:', this.inventarisList);

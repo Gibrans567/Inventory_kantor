@@ -69,7 +69,7 @@ export class DivisiComponent {
     this.isNotDataFound = false;
 
     try {
-      const response = await this.apiService.get(`/divisi`);
+      const response = await this.apiService.get(`/divisi`,true);
 
       // Memastikan response berhasil dan mengakses data divisi
       const divisiData = response?.data ?? [];  // Safe access to 'data' property
@@ -164,7 +164,7 @@ export class DivisiComponent {
       if (result === 'confirmed') {
         try {
           // Panggil API untuk menghapus divisi berdasarkan nama
-          await this.apiService.delete(`/divisi/${namaDivisi}`);
+          await this.apiService.delete(`/divisi/${namaDivisi}`,true);
 
           // Mengambil data divisi terbaru setelah penghapusan
           this.getDivisi(); // Memanggil fungsi untuk memperbarui data divisi dengan data terbaru

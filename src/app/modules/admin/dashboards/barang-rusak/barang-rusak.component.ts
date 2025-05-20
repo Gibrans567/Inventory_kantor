@@ -71,7 +71,7 @@ export class BarangRusakComponent {
 
     try {
       // Mengambil data barang status dari API
-      const response = await this.apiService.get(`/barangStatus`);
+      const response = await this.apiService.get(`/barangStatus`,true);
 
       // Memastikan response berhasil dan mengakses data barang
       const barangData = response?.dataBarang ?? [];  // Mengakses 'dataBarang' dari response
@@ -149,7 +149,7 @@ export class BarangRusakComponent {
     confirm.afterClosed().subscribe(async (result) => {
       if (result === 'confirmed') {
         try {
-          await this.apiService.delete(`/barangStatus/${id}`);
+          await this.apiService.delete(`/barangStatus/${id}`,true);
           this.getBarangStatus();
           console.log(`"${namaBarang}" dari "${posisiAkhir}" berhasil dihapus`);
         } catch (error) {

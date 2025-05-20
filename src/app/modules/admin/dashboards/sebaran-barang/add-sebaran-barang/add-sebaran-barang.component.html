@@ -82,7 +82,7 @@
                         required
                     >
                         <option value="" disabled selected>Pilih divisi</option>
-                        <option *ngFor="let divisi of divisiList" [value]="divisi.id">
+                        <option *ngFor="let divisi of divisiList" [ngValue]="divisi.id">
                             {{ divisi.nama_divisi }}
                         </option>
                     </select>
