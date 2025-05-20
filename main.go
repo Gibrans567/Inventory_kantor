@@ -18,7 +18,8 @@ func main() {
 	database.ConnectDB()
 	database.MigrateDB()
 	controller.InitiateScheduler()
-	
+
+
 	r := gin.Default()
 
 	r.Static("/storage", "./storage")
