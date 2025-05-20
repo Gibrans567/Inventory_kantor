@@ -4,7 +4,7 @@
 
 export const environment = {
     production: false,
-    apiUrl: '//http://103.127.138.100:8080',
+    apiUrl: 'http://103.127.138.100:8080',
     apiKey: 'vvThzsOGCRg_rb6RfzrVMNenknOvEv9Jg6bUWjTMhi4',
     keyCrypto: 'tutupKita23',
     mqtt: {
