@@ -6,7 +6,6 @@ import (
 	"inventory/src/function/routes"
 	"github.com/gin-contrib/cors"
 
-	"time"
 	"github.com/gin-gonic/gin"
 )
 
@@ -25,11 +24,11 @@ func main() {
 	r.Static("/storage", "./storage")
 	// Pasang middleware CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		AllowOrigins:     []string{"*"}, // Ganti dengan URL FE-mu
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		MaxAge:           12 * time.Hour,
+		AllowCredentials: true,
+		MaxAge:           12 * 60 * 60,
 	}))
 
 	// Pasang semua route dari folder routes
