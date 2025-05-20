@@ -24,7 +24,7 @@ func main() {
 	r.Static("/storage", "./storage")
 	// Pasang middleware CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"}, // Ganti dengan URL FE-mu
+		AllowOrigins:     []string{"*"}, 
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		AllowCredentials: true,
