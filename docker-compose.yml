@@ -1,8 +1,8 @@
 version: '3.8'
 
 services:
-  backend:
-    image: mkhalilgibran/inventaris:latest
+  app-invent:
+    image: mkhalilgibran/inventaris:v2
     container_name: backend
     ports:
       - "8080:8081"
@@ -14,7 +14,7 @@ services:
     networks:
       - inventory-network
 
-  nginx:
+  nginx-invent:
     image: nginx:alpine
     container_name: frontend
     ports:
