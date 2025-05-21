@@ -516,7 +516,6 @@ func DeleteInventaris(c *gin.Context) {
 
 	
 	// Hapus Depresiasi yang terkait dengan Inventaris
-		// Hapus Depresiasi yang terkait dengan Inventaris
 	if err := tx.Where("id_barang = ?", id).Delete(&types.Depresiasi{}).Error; err != nil {
 		tx.Rollback()
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus data depresiasi: " + err.Error()})

@@ -3,6 +3,7 @@ package database
 import (
 	"log"
 	"inventory/src/types"
+
 )
 
 func MigrateDB() {

@@ -5,6 +5,7 @@ import (
 	"inventory/src/function/database"
 	"inventory/src/function/routes"
 	"github.com/gin-contrib/cors"
+	
 
 	"github.com/gin-gonic/gin"
 )
