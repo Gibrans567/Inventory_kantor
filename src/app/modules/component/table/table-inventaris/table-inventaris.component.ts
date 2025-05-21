@@ -45,8 +45,8 @@ export class TableInventarisComponent implements OnInit{
       ];
 
     dataSource = new MatTableDataSource<any>([]);
-    isLoadingDelete: boolean = false;
-    isNotDataFound: boolean
+    isLoading: boolean = false;
+    isNotDataFound: boolean = false;
 
     filterValues = {
         divisi: [],
@@ -128,9 +128,7 @@ export class TableInventarisComponent implements OnInit{
             return this._tableUserService.inventoryItems();
           }
 
-          get isLoading() {
-            return this._tableUserService.isLoading()
-          }
+       
 
           get isNotFound() {
             return this._tableUserService.isNotFound()
