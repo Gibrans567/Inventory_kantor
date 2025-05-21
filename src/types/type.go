@@ -201,6 +201,29 @@ type BarangFoto struct {
     Inventaris       Inventaris `gorm:"foreignKey:IdBarang" json:"-"`  // Many to One
 }
 
+type Mobil struct {
+    ID               uint      `json:"id" gorm:"primaryKey"`
+    NamaMobil       string    `json:"nama_mobil"`
+    PlatNomor       string    `json:"plat_nomor"`
+    TipeMobil       string    `json:"tipe_mobil"`
+}
+
+type PenminjamanMobil struct {
+    ID               uint      `json:"id" gorm:"primaryKey"`
+    IdMobil         uint      `json:"id_mobil"`
+    IdUser          uint      `json:"id_user"`
+    IdDivisi        uint      `json:"id_divisi"`
+    TanggalPinjam   time.Time `json:"tanggal_pinjam"`
+    TanggalKembali  time.Time `json:"tanggal_kembali"`
+    StatusPinjam    string    `json:"status_pinjam"`
+    CreatedAt     time.Time
+    UpdatedAt     time.Time
+
+    Mobil          Mobil     `gorm:"foreignKey:IdMobil" json:"-"`  // Many to One
+    User           User      `gorm:"foreignKey:IdUser" json:"-"`    // Many to One
+    Divisi         Divisi    `gorm:"foreignKey:IdDivisi" json:"-"`  // Many to One
+}
+
 
 //audit
 

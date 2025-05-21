@@ -402,7 +402,7 @@ func UploadGambar(c *gin.Context) {
 
     // Membuat path yang bisa diakses melalui URL
     relativePath := strings.TrimPrefix(filepath.ToSlash(filePath), "./") // Menghilangkan './'
-    uploadNotaPath := fmt.Sprintf("http://localhost:8080/%s", relativePath)
+    uploadNotaPath := fmt.Sprintf("http://103.127.138.100:8080/%s", relativePath)
 
     // Update record Inventaris dengan path file
     inv.UploadNota = uploadNotaPath

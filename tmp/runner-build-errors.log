@@ -1,2 +1,0 @@
-# inventory
-.\main.go:21:11: undefined: database.CheckMySQLVersion
