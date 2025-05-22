@@ -1,40 +1,18 @@
-version: "3.9"
+version: '3.8'
+
 services:
-  db-invent:
-    image: mysql:8
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: secret123
-      MYSQL_DATABASE: inventory_kantor
-    ports:
-      - "3308:3306"
-    volumes:
-      - dbdata:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - inventory-network
-
-
-  backend-invent:
-    build: .
-    depends_on:
-      - db-invent
-      
-    environment:
-      DB_HOST: db-invent
-      DB_PORT: "3306"
-      DB_USER: root
-      DB_PASSWORD: secret123
-      DB_NAME: inventory_kantor
+  app-invent:
+    image: mkhalilgibran/inventaris:latest
+    container_name: backend
     ports:
       - "8080:8081"
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=
+      - DB_NAME=inventory_kantor
     networks:
       - inventory-network
-
 
   nginx-invent:
     image: nginx:alpine
@@ -47,9 +25,23 @@ services:
     networks:
       - inventory-network
 
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_DATABASE: inventory_kantor
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - inventory-network
+
 networks:
   inventory-network:
     external: true
 
 volumes:
-  dbdata:
+  db-data:
+    driver: local
