@@ -135,6 +135,25 @@ func SetupRouter(r *gin.Engine){
 		uploadRoutes.POST("", controller.UploadGambar)
 	}
 
+	mobilRoutes := r.Group("/mobil")
+	{
+		mobilRoutes.GET("", controller.GetAllMobil)           
+		mobilRoutes.GET("/:id", controller.GetMobilByID)      
+		mobilRoutes.POST("", controller.CreateMobil)          
+		mobilRoutes.PUT("/:id", controller.UpdateMobil)      
+		mobilRoutes.DELETE("/:id", controller.DeleteMobil)   
+	}
+
+	peminjamanRoutes := r.Group("/peminjaman-mobil")
+	{
+		peminjamanRoutes.GET("", controller.GetAllPeminjamanMobil)                    
+		peminjamanRoutes.GET("/:id", controller.GetPeminjamanMobilByID)               
+		peminjamanRoutes.POST("", controller.CreatePeminjamanMobil)                  
+		peminjamanRoutes.PUT("/:id", controller.UpdatePeminjamanMobil)                
+		peminjamanRoutes.DELETE("/:id", controller.DeletePeminjamanMobil)             
+		peminjamanRoutes.GET("/status/:status", controller.GetPeminjamanByStatus)     
+	}
+
 	// Auth group
 	auth := r.Group("/auth")
 	{

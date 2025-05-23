@@ -7,7 +7,7 @@ package database
  	"os"
  	"time"
 
- 	_ "github.com/go-sql-driver/mysql"
+ 	_ "github.com/go-sql-driver/mysql"  
  	"gorm.io/driver/mysql"
  	"gorm.io/gorm"
  )
@@ -50,7 +50,7 @@ package database
  	DB = db
  	log.Println("Koneksi ke database berhasil.")
 
- 	for i := 0; i < 10; i++ {  
+ 	for i := 0; i < 10; i++ { 
  		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
  		if err == nil {
  			DB = db

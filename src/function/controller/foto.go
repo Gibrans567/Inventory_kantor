@@ -138,7 +138,7 @@ func UploadGambarMulti(c *gin.Context) {
 
         // Membuat path yang bisa diakses melalui URL
         relativePath := strings.TrimPrefix(filepath.ToSlash(filePath), "./") // Menghilangkan './'
-        uploadNotaPath := fmt.Sprintf("http://103.127.138.100:8080/%s", relativePath)
+        uploadNotaPath := fmt.Sprintf("https://sysbar.awh.co.id/%s", relativePath)
 
         // Simpan path foto ke dalam tabel BarangFoto
         barangFoto := types.BarangFoto{
@@ -351,7 +351,7 @@ func UpdateBarangFoto(c *gin.Context) {
 			
 			// Membuat path yang bisa diakses melalui URL
 			relativePath := strings.TrimPrefix(filepath.ToSlash(filePath), "./") // Menghilangkan './'
-			existingFoto.LinkFoto = fmt.Sprintf("http://103.127.138.100:8080/%s", relativePath)
+			existingFoto.LinkFoto = fmt.Sprintf("https://sysbar.awh.co.id/%s", relativePath)
 		} else {
 			// Jika informasi inventaris tersedia, gunakan format yang sama dengan UploadGambarMulti
 			tanggalPembelian := inv.TanggalPembelian.Format("2006-01-02")
@@ -365,7 +365,7 @@ func UpdateBarangFoto(c *gin.Context) {
 			
 			// Membuat path yang bisa diakses melalui URL
 			relativePath := strings.TrimPrefix(filepath.ToSlash(filePath), "./") // Menghilangkan './'
-			existingFoto.LinkFoto = fmt.Sprintf("http://103.127.138.100:8080/%s", relativePath)
+			existingFoto.LinkFoto = fmt.Sprintf("https://sysbar.awh.co.id/%s", relativePath)
 		}
 	}
 

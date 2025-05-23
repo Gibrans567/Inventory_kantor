@@ -206,16 +206,16 @@ type Mobil struct {
     NamaMobil       string    `json:"nama_mobil"`
     PlatNomor       string    `json:"plat_nomor"`
     TipeMobil       string    `json:"tipe_mobil"`
+    StatusPinjam    string    `json:"status_pinjam"`
 }
 
-type PenminjamanMobil struct {
+type PeminjamanMobil struct {
     ID               uint      `json:"id" gorm:"primaryKey"`
     IdMobil         uint      `json:"id_mobil"`
     IdUser          uint      `json:"id_user"`
     IdDivisi        uint      `json:"id_divisi"`
     TanggalPinjam   time.Time `json:"tanggal_pinjam"`
     TanggalKembali  time.Time `json:"tanggal_kembali"`
-    StatusPinjam    string    `json:"status_pinjam"`
     CreatedAt     time.Time
     UpdatedAt     time.Time
 
